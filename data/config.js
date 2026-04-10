@@ -2,12 +2,11 @@ window.APP_CONFIG = {
   appTitle: "Funksimulator",
   language: "de-CH",
   recognitionLanguage: "de-CH",
-  fallbackRecognitionLanguage: "de-DE",
   defaultRate: 0.9,
   defaultPitch: 1,
   defaultSpeechVolume: 1,
   defaultSfxVolume: 0.7,
-  maxTasksPerSession: 8,
+  maxConversationsPerSession: 6,
   useInterimResults: true,
   continuousRecognition: false,
   preferredVoiceKeywords: [
@@ -18,17 +17,15 @@ window.APP_CONFIG = {
     "de",
     "german"
   ],
-  closingWords: [
-    "kommen",
-    "antworten",
-    "ende",
-    "verstanden"
-  ],
-  acceptedRepeatWords: [
-    "wiederholen",
-    "bitte wiederholen",
-    "nicht verstanden"
-  ],
+  swissVocabulary: {
+    answer: "antworten",
+    understood: "verstanden",
+    notUnderstood: "nicht verstanden",
+    repeat: "wiederholen",
+    iRepeat: "ich wiederhole",
+    correct: "richtig",
+    close: "schluss"
+  },
   audio: {
     pttDown: "audio/sfx/ptt-down.wav",
     pttUp: "audio/sfx/ptt-up-beep.wav",
