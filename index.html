@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funksimulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>Funksimulator</h1>
+        <p class="subtitle">Funken lernen mit Funkdisziplin</p>
+      </div>
+      <div class="status-badges">
+        <span id="speechSupportBadge" class="badge">Spracherkennung wird geprüft …</span>
+        <span id="ttsSupportBadge" class="badge">TTS wird geprüft …</span>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <aside class="panel panel-left">
+        <h2>Einstellungen</h2>
+
+        <label class="field">
+          <span>Name / Rufname</span>
+          <input id="studentNameInput" type="text" placeholder="z. B. Bruno" maxlength="20" />
+        </label>
+
+        <label class="field">
+          <span>Modus</span>
+          <select id="modeSelect">
+            <option value="incoming">Angerufen werden</option>
+            <option value="start">Gespräch beginnen</option>
+            <option value="end">Gespräch beenden</option>
+            <option value="repeat">Wiederholen nach Störung</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Schwierigkeit</span>
+          <select id="difficultySelect">
+            <option value="easy">Leicht</option>
+            <option value="medium">Mittel</option>
+            <option value="hard">Schwer</option>
+          </select>
+        </label>
+
+        <label class="field checkbox-row">
+          <input id="noiseToggle" type="checkbox" />
+          <span>Funkrauschen aktivieren</span>
+        </label>
+
+        <label class="field checkbox-row">
+          <input id="autoReadToggle" type="checkbox" checked />
+          <span>Aufgabe automatisch vorlesen</span>
+        </label>
+
+        <label class="field">
+          <span>Stimme</span>
+          <select id="voiceSelect"></select>
+        </label>
+
+        <label class="field">
+          <span>Sprechtempo</span>
+          <input id="rateRange" type="range" min="0.7" max="1.1" step="0.05" value="0.9" />
+        </label>
+
+        <label class="field">
+          <span>Lautstärke Sprache</span>
+          <input id="speechVolumeRange" type="range" min="0" max="1" step="0.05" value="1" />
+        </label>
+
+        <label class="field">
+          <span>Lautstärke Geräusche</span>
+          <input id="sfxVolumeRange" type="range" min="0" max="1" step="0.05" value="0.7" />
+        </label>
+
+        <div class="button-group vertical">
+          <button id="startSessionBtn" class="primary-btn">Training starten</button>
+          <button id="nextTaskBtn" class="secondary-btn" disabled>Nächste Aufgabe</button>
+          <button id="repeatTaskBtn" class="secondary-btn" disabled>Aufgabe wiederholen</button>
+          <button id="showSolutionBtn" class="secondary-btn" disabled>Lösung zeigen</button>
+          <button id="resetBtn" class="danger-btn">Zurücksetzen</button>
+        </div>
+      </aside>
+
+      <section class="panel panel-center">
+        <div class="radio-frame">
+          <div class="radio-header">
+            <div class="radio-label">Schul-Funkgerät</div>
+            <div class="led-row">
+              <span id="ledPower" class="led led-green active"></span>
+              <span id="ledReceive" class="led led-blue"></span>
+              <span id="ledSend" class="led led-red"></span>
+            </div>
+          </div>
+
+          <div class="display">
+            <div class="display-row">
+              <span class="display-label">Aufgabe</span>
+              <span id="progressText" class="display-value">0 / 0</span>
+            </div>
+
+            <div id="taskModeText" class="task-mode">Noch kein Training gestartet</div>
+            <div id="taskText" class="task-text">
+              Wähle links einen Modus und starte das Training.
+            </div>
+
+            <div class="display-row">
+              <span class="display-label">Erkannter Funkspruch</span>
+            </div>
+            <div id="transcriptBox" class="transcript-box">—</div>
+
+            <div class="display-row">
+              <span class="display-label">Rückmeldung</span>
+            </div>
+            <div id="feedbackBox" class="feedback-box neutral">
+              Die App achtet auf Inhalt und Funkdisziplin.
+            </div>
+          </div>
+
+          <div class="ptt-section">
+            <button id="pttButton" class="ptt-button" disabled>
+              <span class="ptt-main">Sprechtaste</span>
+              <span class="ptt-sub">gedrückt halten beim Sprechen</span>
+            </button>
+            <div id="pttHint" class="ptt-hint">Bereit</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel panel-right">
+        <h2>Regeln</h2>
+        <div class="rules-box">
+          <p><strong>Reihenfolge:</strong> Zuerst wen du ansprechen willst, dann wer du bist.</p>
+          <p><strong>Kurz und klar:</strong> Keine langen Erklärungen, nur das Nötige.</p>
+          <p><strong>Sauber beenden:</strong> Nutze passende Funkwörter wie „kommen“, „verstanden“ oder „Ende“.</p>
+          <p><strong>Wiederholen:</strong> Wenn etwas nicht verstanden wurde, wiederhole den Spruch klar und ruhig.</p>
+        </div>
+
+        <h2>Punkte</h2>
+        <div class="score-box">
+          <div class="score-row">
+            <span>Richtig</span>
+            <strong id="scoreCorrect">0</strong>
+          </div>
+          <div class="score-row">
+            <span>Teilweise richtig</span>
+            <strong id="scorePartial">0</strong>
+          </div>
+          <div class="score-row">
+            <span>Noch falsch</span>
+            <strong id="scoreWrong">0</strong>
+          </div>
+        </div>
+
+        <h2>Hinweise</h2>
+        <div class="note-box">
+          <p>Empfohlen: Chrome oder Edge auf dem Desktop.</p>
+          <p>Beim ersten Start musst du dem Mikrofon erlauben.</p>
+          <p>Die Spracherkennung ist nie perfekt. Die App bewertet deshalb tolerant.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="data/config.js"></script>
+  <script src="data/scenarios.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
