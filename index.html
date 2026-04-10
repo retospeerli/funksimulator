@@ -13,22 +13,20 @@
         <h1>Funksimulator</h1>
         <p class="subtitle">Schweizer Funksprache üben: korrekt, kurz und klar</p>
       </div>
-      <div class="status-badges">
-        <span id="speechSupportBadge" class="badge">Spracherkennung wird geprüft …</span>
-        <span id="ttsSupportBadge" class="badge">TTS wird geprüft …</span>
+      <div class="topbar-actions">
+        <button id="openSettingsBtn" class="secondary-btn">Einstellungen</button>
+        <div class="status-badges">
+          <span id="speechSupportBadge" class="badge">Spracherkennung wird geprüft …</span>
+          <span id="ttsSupportBadge" class="badge">TTS wird geprüft …</span>
+        </div>
       </div>
     </header>
 
     <main class="main-grid">
       <aside class="panel panel-left">
-        <h2>Einstellungen</h2>
+        <h2>Training</h2>
 
-        <label class="field">
-          <span>Eigener Rufname</span>
-          <input id="studentNameInput" type="text" placeholder="z. B. Anna" maxlength="20" />
-        </label>
-
-        <label class="field">
+        <div class="field">
           <span>Trainingsart</span>
           <select id="modeSelect">
             <option value="receive">Angerufen werden</option>
@@ -37,53 +35,44 @@
             <option value="notunderstood_pc">PC versteht dich nicht</option>
             <option value="notunderstood_student">Du verstehst den PC nicht</option>
           </select>
-        </label>
+        </div>
 
-        <label class="field">
+        <div class="field">
           <span>Schwierigkeit</span>
           <select id="difficultySelect">
             <option value="easy">Leicht</option>
             <option value="medium">Mittel</option>
             <option value="hard">Schwer</option>
           </select>
-        </label>
-
-        <label class="field checkbox-row">
-          <input id="noiseToggle" type="checkbox" />
-          <span>Funkrauschen aktivieren</span>
-        </label>
-
-        <label class="field checkbox-row">
-          <input id="autoReadToggle" type="checkbox" checked />
-          <span>Aufgaben automatisch vorlesen</span>
-        </label>
-
-        <label class="field">
-          <span>Stimme</span>
-          <select id="voiceSelect"></select>
-        </label>
-
-        <label class="field">
-          <span>Sprechtempo</span>
-          <input id="rateRange" type="range" min="0.7" max="1.1" step="0.05" value="0.9" />
-        </label>
-
-        <label class="field">
-          <span>Lautstärke Sprache</span>
-          <input id="speechVolumeRange" type="range" min="0" max="1" step="0.05" value="1" />
-        </label>
-
-        <label class="field">
-          <span>Lautstärke Geräusche</span>
-          <input id="sfxVolumeRange" type="range" min="0" max="1" step="0.05" value="0.7" />
-        </label>
+        </div>
 
         <div class="button-group vertical">
-          <button id="startSessionBtn" class="primary-btn">Training starten</button>
+          <button id="startSessionBtn" class="primary-btn">Neues Gespräch</button>
           <button id="nextTaskBtn" class="secondary-btn" disabled>Nächstes Gespräch</button>
           <button id="repeatTaskBtn" class="secondary-btn" disabled>Schritt wiederholen</button>
           <button id="showSolutionBtn" class="secondary-btn" disabled>Lösung zeigen</button>
           <button id="resetBtn" class="danger-btn">Zurücksetzen</button>
+        </div>
+
+        <h2>Punkte</h2>
+        <div class="score-box">
+          <div class="score-row">
+            <span>Richtig</span>
+            <strong id="scoreCorrect">0</strong>
+          </div>
+          <div class="score-row">
+            <span>Teilweise richtig</span>
+            <strong id="scorePartial">0</strong>
+          </div>
+          <div class="score-row">
+            <span>Noch falsch</span>
+            <strong id="scoreWrong">0</strong>
+          </div>
+        </div>
+
+        <h2>Gesprächsstatus</h2>
+        <div class="note-box">
+          <p id="conversationStatus">Noch kein Gespräch aktiv.</p>
         </div>
       </aside>
 
@@ -106,7 +95,7 @@
 
             <div id="taskModeText" class="task-mode">Noch kein Training gestartet</div>
             <div id="taskText" class="task-text">
-              Wähle links einen Modus und starte das Training.
+              Starte links ein neues Gespräch. Vor jedem Gespräch erscheint zuerst eine Auftragskarte.
             </div>
 
             <div class="display-row twin">
@@ -144,7 +133,7 @@
       </section>
 
       <aside class="panel panel-right">
-        <h2>Schweizer Funkregeln</h2>
+        <h2>Funkregeln</h2>
         <div class="rules-box">
           <p><strong>1.</strong> Zuerst sagst du, wen du anfunkst.</p>
           <p><strong>2.</strong> Dann sagst du „von“ und deinen eigenen Rufnamen.</p>
@@ -155,35 +144,111 @@
           <p><strong>7.</strong> Gesprächsende: „Richtig, Schluss“ oder „Schluss“.</p>
         </div>
 
-        <h2>Punkte</h2>
-        <div class="score-box">
-          <div class="score-row">
-            <span>Richtig</span>
-            <strong id="scoreCorrect">0</strong>
-          </div>
-          <div class="score-row">
-            <span>Teilweise richtig</span>
-            <strong id="scorePartial">0</strong>
-          </div>
-          <div class="score-row">
-            <span>Noch falsch</span>
-            <strong id="scoreWrong">0</strong>
-          </div>
-        </div>
-
-        <h2>Gesprächsstatus</h2>
-        <div class="note-box">
-          <p id="conversationStatus">Noch kein Gespräch aktiv.</p>
-        </div>
-
         <h2>Hinweise</h2>
         <div class="note-box">
           <p>Empfohlen: Chrome oder Edge.</p>
-          <p>Die App ist für GitHub Pages als statische Webseite gebaut.</p>
-          <p>Die Spracherkennung ist nicht perfekt. Deshalb wird tolerant bewertet.</p>
+          <p>Die Auftragskarte zeigt Ziel, Auftrag und wichtige Informationen.</p>
+          <p>Die Spracherkennung ist nicht perfekt. Deshalb bewertet die App tolerant.</p>
         </div>
       </aside>
     </main>
+  </div>
+
+  <!-- Einstellungen -->
+  <div id="settingsModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <h2>Einstellungen</h2>
+
+      <label class="field">
+        <span>Eigener Rufname</span>
+        <input id="studentNameInput" type="text" placeholder="z. B. Anna" maxlength="20" />
+      </label>
+
+      <label class="field checkbox-row">
+        <input id="noiseToggle" type="checkbox" />
+        <span>Funkrauschen aktivieren</span>
+      </label>
+
+      <label class="field checkbox-row">
+        <input id="autoReadToggle" type="checkbox" checked />
+        <span>Aufgabentexte automatisch vorlesen</span>
+      </label>
+
+      <label class="field">
+        <span>Stimme</span>
+        <select id="voiceSelect"></select>
+      </label>
+
+      <label class="field">
+        <span>Sprechtempo</span>
+        <input id="rateRange" type="range" min="0.7" max="1.1" step="0.05" value="0.9" />
+      </label>
+
+      <label class="field">
+        <span>Lautstärke Sprache</span>
+        <input id="speechVolumeRange" type="range" min="0" max="1" step="0.05" value="1" />
+      </label>
+
+      <label class="field">
+        <span>Lautstärke Geräusche</span>
+        <input id="sfxVolumeRange" type="range" min="0" max="1" step="0.05" value="0.7" />
+      </label>
+
+      <div class="modal-actions">
+        <button id="settingsCancelBtn" class="secondary-btn">Abbrechen</button>
+        <button id="settingsOkBtn" class="primary-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auftragskarte -->
+  <div id="assignmentModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card assignment-card">
+      <div class="assignment-topline">
+        <div class="assignment-badge">Neue Aufgabe</div>
+        <div id="assignmentModeChip" class="assignment-chip">Training</div>
+      </div>
+
+      <h2 id="assignmentTitle">Auftragskarte</h2>
+
+      <div class="assignment-grid">
+        <section class="assignment-section assignment-main">
+          <h3>Ziel der Übung</h3>
+          <p id="assignmentGoal">—</p>
+        </section>
+
+        <section class="assignment-section assignment-main">
+          <h3>Was du heute lernst</h3>
+          <p id="assignmentLearning">—</p>
+        </section>
+
+        <section class="assignment-section assignment-main">
+          <h3>Dein Auftrag</h3>
+          <p id="assignmentBriefing">—</p>
+        </section>
+
+        <section class="assignment-section assignment-main">
+          <h3>Wichtige Informationen</h3>
+          <p id="assignmentDetails">—</p>
+        </section>
+
+        <section class="assignment-section assignment-check">
+          <h3>Vor dem Start</h3>
+          <ul id="assignmentChecklist" class="assignment-list"></ul>
+        </section>
+
+        <section class="assignment-section assignment-help">
+          <h3>Merkhilfe</h3>
+          <div id="assignmentHelper" class="helper-box"></div>
+        </section>
+      </div>
+
+      <div class="modal-actions">
+        <button id="assignmentStartBtn" class="primary-btn">Loslegen</button>
+      </div>
+    </div>
   </div>
 
   <script src="data/config.js"></script>
