@@ -11,7 +11,7 @@
     <header class="topbar">
       <div>
         <h1>Funksimulator</h1>
-        <p class="subtitle">Funken lernen mit Funkdisziplin</p>
+        <p class="subtitle">Schweizer Funksprache üben: korrekt, kurz und klar</p>
       </div>
       <div class="status-badges">
         <span id="speechSupportBadge" class="badge">Spracherkennung wird geprüft …</span>
@@ -24,17 +24,18 @@
         <h2>Einstellungen</h2>
 
         <label class="field">
-          <span>Name / Rufname</span>
-          <input id="studentNameInput" type="text" placeholder="z. B. Bruno" maxlength="20" />
+          <span>Eigener Rufname</span>
+          <input id="studentNameInput" type="text" placeholder="z. B. Anna" maxlength="20" />
         </label>
 
         <label class="field">
-          <span>Modus</span>
+          <span>Trainingsart</span>
           <select id="modeSelect">
-            <option value="incoming">Angerufen werden</option>
+            <option value="receive">Angerufen werden</option>
             <option value="start">Gespräch beginnen</option>
             <option value="end">Gespräch beenden</option>
-            <option value="repeat">Wiederholen nach Störung</option>
+            <option value="notunderstood_pc">PC versteht dich nicht</option>
+            <option value="notunderstood_student">Du verstehst den PC nicht</option>
           </select>
         </label>
 
@@ -54,7 +55,7 @@
 
         <label class="field checkbox-row">
           <input id="autoReadToggle" type="checkbox" checked />
-          <span>Aufgabe automatisch vorlesen</span>
+          <span>Aufgaben automatisch vorlesen</span>
         </label>
 
         <label class="field">
@@ -79,8 +80,8 @@
 
         <div class="button-group vertical">
           <button id="startSessionBtn" class="primary-btn">Training starten</button>
-          <button id="nextTaskBtn" class="secondary-btn" disabled>Nächste Aufgabe</button>
-          <button id="repeatTaskBtn" class="secondary-btn" disabled>Aufgabe wiederholen</button>
+          <button id="nextTaskBtn" class="secondary-btn" disabled>Nächstes Gespräch</button>
+          <button id="repeatTaskBtn" class="secondary-btn" disabled>Schritt wiederholen</button>
           <button id="showSolutionBtn" class="secondary-btn" disabled>Lösung zeigen</button>
           <button id="resetBtn" class="danger-btn">Zurücksetzen</button>
         </div>
@@ -91,7 +92,7 @@
           <div class="radio-header">
             <div class="radio-label">Schul-Funkgerät</div>
             <div class="led-row">
-              <span id="ledPower" class="led led-green active"></span>
+              <span class="led led-green active"></span>
               <span id="ledReceive" class="led led-blue"></span>
               <span id="ledSend" class="led led-red"></span>
             </div>
@@ -99,13 +100,24 @@
 
           <div class="display">
             <div class="display-row">
-              <span class="display-label">Aufgabe</span>
+              <span class="display-label">Gespräch</span>
               <span id="progressText" class="display-value">0 / 0</span>
             </div>
 
             <div id="taskModeText" class="task-mode">Noch kein Training gestartet</div>
             <div id="taskText" class="task-text">
               Wähle links einen Modus und starte das Training.
+            </div>
+
+            <div class="display-row twin">
+              <div>
+                <span class="display-label">Schritt</span>
+                <div id="stepText" class="small-info">—</div>
+              </div>
+              <div>
+                <span class="display-label">Situation</span>
+                <div id="situationText" class="small-info">—</div>
+              </div>
             </div>
 
             <div class="display-row">
@@ -117,7 +129,7 @@
               <span class="display-label">Rückmeldung</span>
             </div>
             <div id="feedbackBox" class="feedback-box neutral">
-              Die App achtet auf Inhalt und Funkdisziplin.
+              Die App prüft Reihenfolge, Inhalt und schweizerische Funkwörter.
             </div>
           </div>
 
@@ -132,12 +144,15 @@
       </section>
 
       <aside class="panel panel-right">
-        <h2>Regeln</h2>
+        <h2>Schweizer Funkregeln</h2>
         <div class="rules-box">
-          <p><strong>Reihenfolge:</strong> Zuerst wen du ansprechen willst, dann wer du bist.</p>
-          <p><strong>Kurz und klar:</strong> Keine langen Erklärungen, nur das Nötige.</p>
-          <p><strong>Sauber beenden:</strong> Nutze passende Funkwörter wie „kommen“, „verstanden“ oder „Ende“.</p>
-          <p><strong>Wiederholen:</strong> Wenn etwas nicht verstanden wurde, wiederhole den Spruch klar und ruhig.</p>
+          <p><strong>1.</strong> Zuerst sagst du, wen du anfunkst.</p>
+          <p><strong>2.</strong> Dann sagst du „von“ und deinen eigenen Rufnamen.</p>
+          <p><strong>3.</strong> Danach kommt die Meldung: kurz und klar.</p>
+          <p><strong>4.</strong> Am Schluss folgt meist „antworten“.</p>
+          <p><strong>5.</strong> Wenn etwas unklar ist: „Nicht verstanden, wiederholen, antworten“.</p>
+          <p><strong>6.</strong> Beim Wiederholen: „Ich wiederhole, … , antworten“.</p>
+          <p><strong>7.</strong> Gesprächsende: „Richtig, Schluss“ oder „Schluss“.</p>
         </div>
 
         <h2>Punkte</h2>
@@ -156,11 +171,16 @@
           </div>
         </div>
 
+        <h2>Gesprächsstatus</h2>
+        <div class="note-box">
+          <p id="conversationStatus">Noch kein Gespräch aktiv.</p>
+        </div>
+
         <h2>Hinweise</h2>
         <div class="note-box">
-          <p>Empfohlen: Chrome oder Edge auf dem Desktop.</p>
-          <p>Beim ersten Start musst du dem Mikrofon erlauben.</p>
-          <p>Die Spracherkennung ist nie perfekt. Die App bewertet deshalb tolerant.</p>
+          <p>Empfohlen: Chrome oder Edge.</p>
+          <p>Die App ist für GitHub Pages als statische Webseite gebaut.</p>
+          <p>Die Spracherkennung ist nicht perfekt. Deshalb wird tolerant bewertet.</p>
         </div>
       </aside>
     </main>
