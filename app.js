@@ -26,21 +26,41 @@
     staticAudio: null,
     audioCache: {},
     pttPressed: false,
-    selfCallsign: "Anna"
+    selfCallsign: "Anna",
+    pendingConversationTemplate: null,
+    settingsDraft: null
   };
 
   const els = {
     speechSupportBadge: document.getElementById("speechSupportBadge"),
     ttsSupportBadge: document.getElementById("ttsSupportBadge"),
+
+    openSettingsBtn: document.getElementById("openSettingsBtn"),
+    settingsModal: document.getElementById("settingsModal"),
+    settingsOkBtn: document.getElementById("settingsOkBtn"),
+    settingsCancelBtn: document.getElementById("settingsCancelBtn"),
+
     studentNameInput: document.getElementById("studentNameInput"),
-    modeSelect: document.getElementById("modeSelect"),
-    difficultySelect: document.getElementById("difficultySelect"),
     noiseToggle: document.getElementById("noiseToggle"),
     autoReadToggle: document.getElementById("autoReadToggle"),
     voiceSelect: document.getElementById("voiceSelect"),
     rateRange: document.getElementById("rateRange"),
     speechVolumeRange: document.getElementById("speechVolumeRange"),
     sfxVolumeRange: document.getElementById("sfxVolumeRange"),
+
+    assignmentModal: document.getElementById("assignmentModal"),
+    assignmentTitle: document.getElementById("assignmentTitle"),
+    assignmentGoal: document.getElementById("assignmentGoal"),
+    assignmentLearning: document.getElementById("assignmentLearning"),
+    assignmentBriefing: document.getElementById("assignmentBriefing"),
+    assignmentDetails: document.getElementById("assignmentDetails"),
+    assignmentChecklist: document.getElementById("assignmentChecklist"),
+    assignmentHelper: document.getElementById("assignmentHelper"),
+    assignmentModeChip: document.getElementById("assignmentModeChip"),
+    assignmentStartBtn: document.getElementById("assignmentStartBtn"),
+
+    modeSelect: document.getElementById("modeSelect"),
+    difficultySelect: document.getElementById("difficultySelect"),
     startSessionBtn: document.getElementById("startSessionBtn"),
     nextTaskBtn: document.getElementById("nextTaskBtn"),
     repeatTaskBtn: document.getElementById("repeatTaskBtn"),
@@ -70,7 +90,7 @@
     setupEvents();
     preloadAudio();
     updateScoreUI();
-    els.studentNameInput.value = state.selfCallsign;
+    applySettingsToUI();
   }
 
   function setupSupportBadges() {
@@ -212,12 +232,14 @@
   }
 
   function setupEvents() {
+    els.openSettingsBtn.addEventListener("click", openSettingsModal);
+    els.settingsCancelBtn.addEventListener("click", closeSettingsModalWithoutSave);
+    els.settingsOkBtn.addEventListener("click", saveSettingsAndClose);
+
+    els.assignmentStartBtn.addEventListener("click", startPendingConversation);
+
     els.voiceSelect.addEventListener("change", () => {
       state.selectedVoiceName = els.voiceSelect.value;
-    });
-
-    els.studentNameInput.addEventListener("input", () => {
-      state.selfCallsign = sanitizeCallsign(els.studentNameInput.value) || "Anna";
     });
 
     els.startSessionBtn.addEventListener("click", startSession);
@@ -243,14 +265,79 @@
     Object.entries(config.audio).forEach(([key, path]) => {
       const audio = new Audio(path);
       audio.preload = "auto";
-      audio.volume = parseFloat(els.sfxVolumeRange.value);
+      audio.volume = parseFloat(els.sfxVolumeRange.value || config.defaultSfxVolume);
       state.audioCache[key] = audio;
     });
 
     state.staticAudio = new Audio(config.audio.staticLow);
     state.staticAudio.loop = true;
     state.staticAudio.preload = "auto";
-    state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value) * 0.35;
+    state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value || config.defaultSfxVolume) * 0.5;
+  }
+
+  function applySettingsToUI() {
+    els.studentNameInput.value = state.selfCallsign;
+    els.rateRange.value = String(config.defaultRate);
+    els.speechVolumeRange.value = String(config.defaultSpeechVolume);
+    els.sfxVolumeRange.value = String(config.defaultSfxVolume);
+    els.autoReadToggle.checked = true;
+    els.noiseToggle.checked = false;
+  }
+
+  function snapshotSettings() {
+    return {
+      selfCallsign: state.selfCallsign,
+      noiseEnabled: els.noiseToggle.checked,
+      autoRead: els.autoReadToggle.checked,
+      voiceName: els.voiceSelect.value,
+      rate: els.rateRange.value,
+      speechVol: els.speechVolumeRange.value,
+      sfxVol: els.sfxVolumeRange.value
+    };
+  }
+
+  function openSettingsModal() {
+    state.settingsDraft = snapshotSettings();
+    els.settingsModal.classList.remove("hidden");
+    els.settingsModal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeSettingsModalWithoutSave() {
+    if (!state.settingsDraft) {
+      hideSettingsModal();
+      return;
+    }
+
+    state.selfCallsign = state.settingsDraft.selfCallsign;
+    els.studentNameInput.value = state.settingsDraft.selfCallsign;
+    els.noiseToggle.checked = state.settingsDraft.noiseEnabled;
+    els.autoReadToggle.checked = state.settingsDraft.autoRead;
+    els.voiceSelect.value = state.settingsDraft.voiceName;
+    els.rateRange.value = state.settingsDraft.rate;
+    els.speechVolumeRange.value = state.settingsDraft.speechVol;
+    els.sfxVolumeRange.value = state.settingsDraft.sfxVol;
+    updateAudioVolumes();
+    hideSettingsModal();
+  }
+
+  function saveSettingsAndClose() {
+    state.selfCallsign = sanitizeCallsign(els.studentNameInput.value) || "Anna";
+    els.studentNameInput.value = state.selfCallsign;
+    state.selectedVoiceName = els.voiceSelect.value;
+    updateAudioVolumes();
+    hideSettingsModal();
+  }
+
+  function hideSettingsModal() {
+    els.settingsModal.classList.add("hidden");
+    els.settingsModal.setAttribute("aria-hidden", "true");
+    state.settingsDraft = null;
+  }
+
+  function updateAudioVolumes() {
+    if (state.staticAudio) {
+      state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value) * 0.5;
+    }
   }
 
   function playSfx(name) {
@@ -266,11 +353,11 @@
     }
   }
 
-  function startStaticNoise() {
+  function startStaticNoise(level = 0.5) {
     if (!els.noiseToggle.checked || !state.staticAudio) return;
     state.staticAudio.pause();
     state.staticAudio.currentTime = 0;
-    state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value) * 0.35;
+    state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value) * level;
     state.staticAudio.play().catch(() => {});
   }
 
@@ -281,9 +368,6 @@
   }
 
   function startSession() {
-    state.selfCallsign = sanitizeCallsign(els.studentNameInput.value) || "Anna";
-    els.studentNameInput.value = state.selfCallsign;
-
     const mode = els.modeSelect.value;
     const difficulty = els.difficultySelect.value;
 
@@ -325,15 +409,128 @@
     }
 
     const chosen = available[Math.floor(Math.random() * available.length)];
-    state.currentConversation = buildConversation(chosen, state.selfCallsign);
+    state.pendingConversationTemplate = chosen;
     state.usedScenarioIds.add(chosen.id);
     state.currentConversationIndex += 1;
+
+    els.progressText.textContent = `${state.currentConversationIndex} / ${Math.min(config.maxConversationsPerSession, state.filteredScenarios.length)}`;
+    openAssignmentCard(chosen);
+  }
+
+  function openAssignmentCard(template) {
+    const assignment = template.assignment || {};
+    els.assignmentTitle.textContent = template.title || "Auftragskarte";
+    els.assignmentGoal.textContent = assignment.goal || "—";
+    els.assignmentLearning.textContent = assignment.learning || "—";
+    els.assignmentBriefing.textContent = assignment.briefing || "—";
+    els.assignmentDetails.textContent = assignment.details || "—";
+    els.assignmentModeChip.textContent = modeLabel(template.mode);
+
+    renderChecklist(template.mode);
+    renderHelper(template.mode);
+
+    els.assignmentModal.classList.remove("hidden");
+    els.assignmentModal.setAttribute("aria-hidden", "false");
+  }
+
+  function renderChecklist(mode) {
+    const itemsByMode = {
+      receive: [
+        "Ich höre zuerst genau zu.",
+        "Ich antworte mit dem richtigen Rufnamen.",
+        "Ich beende das Gespräch sauber."
+      ],
+      start: [
+        "Ich nenne zuerst, wen ich rufe.",
+        "Dann sage ich „von“ und meinen Rufnamen.",
+        "Danach funke ich die Meldung kurz und klar."
+      ],
+      end: [
+        "Ich höre den letzten Funkspruch genau.",
+        "Ich benutze die richtige Schlussformel.",
+        "Ich beende das Gespräch eindeutig."
+      ],
+      notunderstood_pc: [
+        "Ich funke zuerst die normale Meldung.",
+        "Wenn der PC es nicht versteht, beginne ich mit „Ich wiederhole“.",
+        "Ich wiederhole die ganze Meldung sauber."
+      ],
+      notunderstood_student: [
+        "Ich rate nicht.",
+        "Wenn ich nichts verstehe, verlange ich korrekt eine Wiederholung.",
+        "Danach bestätige ich sauber."
+      ]
+    };
+
+    els.assignmentChecklist.innerHTML = "";
+    const items = itemsByMode[mode] || [];
+
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      els.assignmentChecklist.appendChild(li);
+    });
+  }
+
+  function renderHelper(mode) {
+    const helperSets = {
+      receive: [
+        { label: "Antwort auf Anruf", text: "Bruno von Anna, verstanden, antworten" },
+        { label: "Sauber beenden", text: "Richtig, Schluss" }
+      ],
+      start: [
+        { label: "Gespräch eröffnen", text: "Bruno von Anna, antworten" },
+        { label: "Meldung funken", text: "Treffpunkt … um … , antworten" }
+      ],
+      end: [
+        { label: "Gespräch abschliessen", text: "Richtig, Schluss" },
+        { label: "Letztes Wort", text: "Schluss" }
+      ],
+      notunderstood_pc: [
+        { label: "Normale Meldung", text: "Treffpunkt … um … , antworten" },
+        { label: "Wiederholung", text: "Ich wiederhole, Treffpunkt … um … , antworten" }
+      ],
+      notunderstood_student: [
+        { label: "Wiederholung verlangen", text: "Nicht verstanden, wiederholen, antworten" },
+        { label: "Danach bestätigen", text: "Richtig, Schluss" }
+      ]
+    };
+
+    els.assignmentHelper.innerHTML = "";
+    const set = helperSets[mode] || [];
+
+    set.forEach((entry) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "helper-item";
+
+      const label = document.createElement("span");
+      label.className = "helper-label";
+      label.textContent = entry.label;
+
+      const text = document.createElement("span");
+      text.className = "helper-text";
+      text.textContent = entry.text;
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(text);
+      els.assignmentHelper.appendChild(wrapper);
+    });
+  }
+
+  function startPendingConversation() {
+    if (!state.pendingConversationTemplate) return;
+
+    els.assignmentModal.classList.add("hidden");
+    els.assignmentModal.setAttribute("aria-hidden", "true");
+
+    const chosen = state.pendingConversationTemplate;
+    state.currentConversation = buildConversation(chosen, state.selfCallsign);
     state.currentStepIndex = 0;
     state.transcriptFinal = "";
+    state.pendingConversationTemplate = null;
 
     els.taskModeText.textContent = `${chosen.title} · ${difficultyLabel(chosen.difficulty)}`;
     els.situationText.textContent = chosen.situation || "—";
-    els.progressText.textContent = `${state.currentConversationIndex} / ${Math.min(config.maxConversationsPerSession, state.filteredScenarios.length)}`;
     els.conversationStatus.textContent = "Gespräch aktiv.";
     setFeedback("Das Gespräch startet jetzt.", "neutral");
 
@@ -361,10 +558,10 @@
     }
 
     if (step.role === "pc") {
-      els.taskText.textContent = "Höre genau zu. Danach funke deine Antwort.";
+      els.taskText.textContent = step.distorted ? "Gestörte Funkmeldung …" : "Höre genau zu. Danach funke deine Antwort.";
       els.conversationStatus.textContent = "Die Gegenstation spricht.";
       if (autoSpeak && els.autoReadToggle.checked) {
-        speakIncoming(step.text, !!step.distorted);
+        speakIncoming(step);
       }
       return;
     }
@@ -382,34 +579,39 @@
     if (step.role === "instruction") {
       speakPrompt(step.text);
     } else if (step.role === "pc") {
-      speakIncoming(step.text, !!step.distorted);
+      speakIncoming(step);
     }
   }
 
   function speakPrompt(text) {
     setReceiveState(true);
     setTimeout(() => {
-      speakText(text, false, () => {
+      speakText(text, { distorted: false }, () => {
         setReceiveState(false);
         els.conversationStatus.textContent = "Jetzt bist du am Zug.";
       });
     }, 100);
   }
 
-  function speakIncoming(text, distorted = false) {
+  function speakIncoming(step) {
     playSfx("incoming");
     setReceiveState(true);
-    els.taskText.textContent = text;
+
+    const shownText = step.distorted ? "Gestörte Funkmeldung …" : step.text;
+    els.taskText.textContent = shownText;
 
     setTimeout(() => {
-      speakText(text, distorted, () => {
+      speakText(step.text, {
+        distorted: !!step.distorted,
+        distortedSpeakText: step.distortedSpeakText || ""
+      }, () => {
         setReceiveState(false);
         els.conversationStatus.textContent = "Jetzt antworte mit der Sprechtaste.";
       });
     }, 180);
   }
 
-  function speakText(text, distorted = false, onEnd) {
+  function speakText(text, options = {}, onEnd) {
     if (!state.ttsSupported) {
       if (typeof onEnd === "function") onEnd();
       return;
@@ -418,10 +620,15 @@
     window.speechSynthesis.cancel();
     stopStaticNoise();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    const distorted = !!options.distorted;
+    const speakContent = distorted && options.distortedSpeakText
+      ? options.distortedSpeakText
+      : text;
+
+    const utterance = new SpeechSynthesisUtterance(speakContent);
     utterance.lang = config.language;
-    utterance.rate = distorted ? 0.8 : parseFloat(els.rateRange.value);
-    utterance.pitch = distorted ? 0.82 : config.defaultPitch;
+    utterance.rate = distorted ? 0.62 : parseFloat(els.rateRange.value);
+    utterance.pitch = distorted ? 0.55 : config.defaultPitch;
     utterance.volume = parseFloat(els.speechVolumeRange.value);
 
     const selectedVoice = findVoiceForSpeech(distorted);
@@ -429,24 +636,19 @@
       utterance.voice = selectedVoice;
     }
 
-    if (distorted && els.noiseToggle.checked) {
-      startStaticNoise();
-      utterance.onend = () => {
-        stopStaticNoise();
-        if (typeof onEnd === "function") onEnd();
-      };
-      utterance.onerror = () => {
-        stopStaticNoise();
-        if (typeof onEnd === "function") onEnd();
-      };
-    } else {
-      utterance.onend = () => {
-        if (typeof onEnd === "function") onEnd();
-      };
-      utterance.onerror = () => {
-        if (typeof onEnd === "function") onEnd();
-      };
+    if (distorted) {
+      startStaticNoise(0.95);
     }
+
+    utterance.onend = () => {
+      stopStaticNoise();
+      if (typeof onEnd === "function") onEnd();
+    };
+
+    utterance.onerror = () => {
+      stopStaticNoise();
+      if (typeof onEnd === "function") onEnd();
+    };
 
     window.speechSynthesis.speak(utterance);
   }
@@ -481,7 +683,7 @@
     setFeedback("Senden läuft …", "neutral");
     startPttVisual();
     playSfx("pttDown");
-    startStaticNoise();
+    startStaticNoise(0.35);
 
     try {
       state.recognition.lang = config.recognitionLanguage;
@@ -584,61 +786,30 @@
       return;
     }
 
-    while (getCurrentStep() && getCurrentStep().role === "pc") {
-      const pcStep = getCurrentStep();
-      speakIncoming(pcStep.text, !!pcStep.distorted);
-
-      const waitTime = estimateSpeechDuration(pcStep.text) + 200;
-      const nextIndex = state.currentStepIndex + 1;
-
-      setTimeout(() => {
-        state.currentStepIndex = nextIndex;
-
-        if (!getCurrentStep()) {
-          finishConversation();
-          return;
-        }
-
-        if (getCurrentStep().role === "pc") {
-          proceedAfterCorrectStepFromPcLoop();
-        } else {
-          presentCurrentStep(false);
-        }
-      }, waitTime);
-
-      return;
-    }
-
-    presentCurrentStep(true);
+    runAutomaticPcSteps();
   }
 
-  function proceedAfterCorrectStepFromPcLoop() {
-    while (getCurrentStep() && getCurrentStep().role === "pc") {
-      const pcStep = getCurrentStep();
-      speakIncoming(pcStep.text, !!pcStep.distorted);
+  function runAutomaticPcSteps() {
+    const step = getCurrentStep();
 
-      const waitTime = estimateSpeechDuration(pcStep.text) + 200;
-      const nextIndex = state.currentStepIndex + 1;
-
-      setTimeout(() => {
-        state.currentStepIndex = nextIndex;
-        if (!getCurrentStep()) {
-          finishConversation();
-          return;
-        }
-
-        if (getCurrentStep().role === "pc") {
-          proceedAfterCorrectStepFromPcLoop();
-        } else {
-          presentCurrentStep(false);
-        }
-      }, waitTime);
-
+    if (!step) {
+      finishConversation();
       return;
     }
 
-    if (!getCurrentStep()) {
-      finishConversation();
+    if (step.role === "pc") {
+      speakIncoming(step);
+      const spokenLength = estimateSpeechDuration(step.distorted ? (step.distortedSpeakText || step.text) : step.text) + 250;
+
+      setTimeout(() => {
+        state.currentStepIndex += 1;
+        runAutomaticPcSteps();
+      }, spokenLength);
+      return;
+    }
+
+    if (step.role === "instruction") {
+      presentCurrentStep(true);
       return;
     }
 
@@ -677,7 +848,7 @@
 
     const summary = `Training fertig. Richtig: ${state.score.correct}, teilweise richtig: ${state.score.partial}, noch falsch: ${state.score.wrong}.`;
     setFeedback(summary, "good");
-    speakText(summary, false);
+    speakText(summary, { distorted: false });
   }
 
   function showSolution() {
@@ -686,7 +857,7 @@
 
     const solution = `Eine passende Lösung ist: ${step.expectedResponse}`;
     setFeedback(solution, "partial");
-    speakText(step.expectedResponse, false);
+    speakText(step.expectedResponse, { distorted: false });
   }
 
   function evaluateTranscript(rawTranscript, evaluationRules) {
@@ -817,21 +988,19 @@
         nextStep.text = replaceSelfPlaceholder(nextStep.text, selfCallsign);
       }
 
+      if (typeof nextStep.distortedSpeakText === "string") {
+        nextStep.distortedSpeakText = replaceSelfPlaceholder(nextStep.distortedSpeakText, selfCallsign);
+      }
+
       if (typeof nextStep.expectedResponse === "string") {
         nextStep.expectedResponse = replaceSelfPlaceholder(nextStep.expectedResponse, selfCallsign);
       }
 
       if (nextStep.evaluation) {
         const evalClone = JSON.parse(JSON.stringify(nextStep.evaluation));
-        evalClone.requiredAny = (evalClone.requiredAny || []).map((item) =>
-          replaceSelfPlaceholder(item, selfCallsign)
-        );
-        evalClone.requiredClosingAny = (evalClone.requiredClosingAny || []).map((item) =>
-          replaceSelfPlaceholder(item, selfCallsign)
-        );
-        evalClone.requiredNumberAny = (evalClone.requiredNumberAny || []).map((item) =>
-          replaceSelfPlaceholder(item, selfCallsign)
-        );
+        evalClone.requiredAny = (evalClone.requiredAny || []).map((item) => replaceSelfPlaceholder(item, selfCallsign));
+        evalClone.requiredClosingAny = (evalClone.requiredClosingAny || []).map((item) => replaceSelfPlaceholder(item, selfCallsign));
+        evalClone.requiredNumberAny = (evalClone.requiredNumberAny || []).map((item) => replaceSelfPlaceholder(item, selfCallsign));
         evalClone.requiredOrderedAny = (evalClone.requiredOrderedAny || []).map((group) =>
           group.map((item) => replaceSelfPlaceholder(item, selfCallsign))
         );
@@ -883,9 +1052,18 @@
     return value;
   }
 
+  function modeLabel(mode) {
+    if (mode === "receive") return "Angerufen werden";
+    if (mode === "start") return "Gespräch beginnen";
+    if (mode === "end") return "Gespräch beenden";
+    if (mode === "notunderstood_pc") return "PC versteht dich nicht";
+    if (mode === "notunderstood_student") return "Du verstehst den PC nicht";
+    return "Training";
+  }
+
   function estimateSpeechDuration(text) {
     const words = String(text).trim().split(/\s+/).filter(Boolean).length;
-    return Math.max(1500, words * 420);
+    return Math.max(1400, words * 480);
   }
 
   function resetApp() {
@@ -906,6 +1084,7 @@
 
     state.sessionActive = false;
     state.currentConversation = null;
+    state.pendingConversationTemplate = null;
     state.currentConversationIndex = 0;
     state.currentStepIndex = 0;
     state.usedScenarioIds.clear();
@@ -916,7 +1095,7 @@
     updateScoreUI();
 
     els.taskModeText.textContent = "Noch kein Training gestartet";
-    els.taskText.textContent = "Wähle links einen Modus und starte das Training.";
+    els.taskText.textContent = "Starte links ein neues Gespräch. Vor jedem Gespräch erscheint zuerst eine Auftragskarte.";
     els.stepText.textContent = "—";
     els.situationText.textContent = "—";
     els.transcriptBox.textContent = "—";
