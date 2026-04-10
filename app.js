@@ -10,8 +10,9 @@
     sessionActive: false,
     filteredScenarios: [],
     usedScenarioIds: new Set(),
-    currentScenario: null,
-    currentIndex: 0,
+    currentConversation: null,
+    currentConversationIndex: 0,
+    currentStepIndex: 0,
     score: {
       correct: 0,
       partial: 0,
@@ -24,7 +25,8 @@
     transcriptFinal: "",
     staticAudio: null,
     audioCache: {},
-    pttPressed: false
+    pttPressed: false,
+    selfCallsign: "Anna"
   };
 
   const els = {
@@ -46,6 +48,8 @@
     resetBtn: document.getElementById("resetBtn"),
     taskModeText: document.getElementById("taskModeText"),
     taskText: document.getElementById("taskText"),
+    stepText: document.getElementById("stepText"),
+    situationText: document.getElementById("situationText"),
     transcriptBox: document.getElementById("transcriptBox"),
     feedbackBox: document.getElementById("feedbackBox"),
     progressText: document.getElementById("progressText"),
@@ -55,7 +59,8 @@
     ledSend: document.getElementById("ledSend"),
     scoreCorrect: document.getElementById("scoreCorrect"),
     scorePartial: document.getElementById("scorePartial"),
-    scoreWrong: document.getElementById("scoreWrong")
+    scoreWrong: document.getElementById("scoreWrong"),
+    conversationStatus: document.getElementById("conversationStatus")
   };
 
   function init() {
@@ -65,12 +70,11 @@
     setupEvents();
     preloadAudio();
     updateScoreUI();
+    els.studentNameInput.value = state.selfCallsign;
   }
 
   function setupSupportBadges() {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     state.recognitionSupported = !!SpeechRecognition;
 
     if (state.recognitionSupported) {
@@ -99,32 +103,23 @@
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       state.voices = voices;
-
       els.voiceSelect.innerHTML = "";
 
-      voices
-        .filter((voice) => voice.lang.toLowerCase().startsWith("de"))
-        .forEach((voice) => {
-          const option = document.createElement("option");
-          option.value = voice.name;
-          option.textContent = `${voice.name} (${voice.lang})`;
-          els.voiceSelect.appendChild(option);
-        });
+      const germanVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("de"));
+      const usable = germanVoices.length ? germanVoices : voices;
 
-      if (!els.voiceSelect.options.length) {
-        voices.forEach((voice) => {
-          const option = document.createElement("option");
-          option.value = voice.name;
-          option.textContent = `${voice.name} (${voice.lang})`;
-          els.voiceSelect.appendChild(option);
-        });
-      }
+      usable.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        els.voiceSelect.appendChild(option);
+      });
 
       const preferred = choosePreferredVoice();
       if (preferred) {
         els.voiceSelect.value = preferred.name;
         state.selectedVoiceName = preferred.name;
-      } else if (els.voiceSelect.options.length > 0) {
+      } else if (els.voiceSelect.options.length) {
         state.selectedVoiceName = els.voiceSelect.value;
       }
     }
@@ -140,21 +135,15 @@
 
     const ranked = germanVoices.find((voice) => {
       const name = voice.name.toLowerCase();
-      return config.preferredVoiceKeywords.some((keyword) =>
-        name.includes(keyword)
-      );
+      return config.preferredVoiceKeywords.some((keyword) => name.includes(keyword));
     });
 
     return ranked || germanVoices[0] || state.voices[0] || null;
   }
 
   function setupRecognition() {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      return;
-    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
     recognition.lang = config.recognitionLanguage;
@@ -165,7 +154,7 @@
     recognition.onstart = () => {
       state.isRecognizing = true;
       setSendState(true);
-      els.pttHint.textContent = "Sprich jetzt klar in das Mikrofon.";
+      els.pttHint.textContent = "Senden läuft …";
       els.transcriptBox.textContent = "Höre zu …";
     };
 
@@ -186,7 +175,6 @@
 
       finalTranscript = finalTranscript.trim();
       interimTranscript = interimTranscript.trim();
-
       state.transcriptFinal = finalTranscript;
 
       els.transcriptBox.textContent =
@@ -196,26 +184,16 @@
     recognition.onerror = (event) => {
       state.isRecognizing = false;
       setSendState(false);
-
-      if (event.error === "not-allowed") {
-        setFeedback(
-          "Bitte erlaube den Zugriff auf das Mikrofon. Ohne Mikrofon kann die App den Funkspruch nicht prüfen.",
-          "bad"
-        );
-      } else if (event.error === "no-speech") {
-        setFeedback(
-          "Ich habe keine Sprache erkannt. Drücke die Sprechtaste und sprich klar und ruhig.",
-          "partial"
-        );
-      } else {
-        setFeedback(
-          `Spracherkennungs-Fehler: ${event.error}. Versuche es noch einmal.`,
-          "bad"
-        );
-      }
-
       stopStaticNoise();
       stopPttVisual();
+
+      if (event.error === "not-allowed") {
+        setFeedback("Bitte Mikrofon erlauben. Sonst kann der Funkspruch nicht geprüft werden.", "bad");
+      } else if (event.error === "no-speech") {
+        setFeedback("Ich habe keine Sprache erkannt. Drücke die Sprechtaste und sprich klar.", "partial");
+      } else {
+        setFeedback(`Spracherkennungs-Fehler: ${event.error}.`, "bad");
+      }
     };
 
     recognition.onend = () => {
@@ -226,7 +204,7 @@
       stopPttVisual();
 
       if (wasRecognizing) {
-        evaluateCurrentTranscript();
+        evaluateCurrentStep();
       }
     };
 
@@ -238,9 +216,13 @@
       state.selectedVoiceName = els.voiceSelect.value;
     });
 
+    els.studentNameInput.addEventListener("input", () => {
+      state.selfCallsign = sanitizeCallsign(els.studentNameInput.value) || "Anna";
+    });
+
     els.startSessionBtn.addEventListener("click", startSession);
-    els.nextTaskBtn.addEventListener("click", nextScenario);
-    els.repeatTaskBtn.addEventListener("click", repeatCurrentTask);
+    els.nextTaskBtn.addEventListener("click", nextConversation);
+    els.repeatTaskBtn.addEventListener("click", repeatCurrentStepPrompt);
     els.showSolutionBtn.addEventListener("click", showSolution);
     els.resetBtn.addEventListener("click", resetApp);
 
@@ -286,7 +268,6 @@
 
   function startStaticNoise() {
     if (!els.noiseToggle.checked || !state.staticAudio) return;
-
     state.staticAudio.pause();
     state.staticAudio.currentTime = 0;
     state.staticAudio.volume = parseFloat(els.sfxVolumeRange.value) * 0.35;
@@ -300,25 +281,24 @@
   }
 
   function startSession() {
+    state.selfCallsign = sanitizeCallsign(els.studentNameInput.value) || "Anna";
+    els.studentNameInput.value = state.selfCallsign;
+
     const mode = els.modeSelect.value;
     const difficulty = els.difficultySelect.value;
 
     state.filteredScenarios = scenarios.filter(
-      (scenario) =>
-        scenario.mode === mode && scenario.difficulty === difficulty
+      (scenario) => scenario.mode === mode && scenario.difficulty === difficulty
     );
 
     if (!state.filteredScenarios.length) {
-      setFeedback(
-        "Für diese Kombination aus Modus und Schwierigkeit gibt es noch keine Aufgaben.",
-        "bad"
-      );
+      setFeedback("Für diese Auswahl gibt es noch keine Gespräche.", "bad");
       return;
     }
 
     state.sessionActive = true;
     state.usedScenarioIds.clear();
-    state.currentIndex = 0;
+    state.currentConversationIndex = 0;
     state.score.correct = 0;
     state.score.partial = 0;
     state.score.wrong = 0;
@@ -329,111 +309,159 @@
     els.showSolutionBtn.disabled = false;
     els.pttButton.disabled = !state.recognitionSupported;
 
-    nextScenario();
+    nextConversation();
   }
 
-  function nextScenario() {
+  function nextConversation() {
     if (!state.sessionActive) return;
 
     const available = state.filteredScenarios.filter(
       (scenario) => !state.usedScenarioIds.has(scenario.id)
     );
 
-    if (!available.length || state.currentIndex >= config.maxTasksPerSession) {
+    if (!available.length || state.currentConversationIndex >= config.maxConversationsPerSession) {
       finishSession();
       return;
     }
 
-    const randomIndex = Math.floor(Math.random() * available.length);
-    const scenario = available[randomIndex];
-
-    state.currentScenario = scenario;
-    state.usedScenarioIds.add(scenario.id);
-    state.currentIndex += 1;
+    const chosen = available[Math.floor(Math.random() * available.length)];
+    state.currentConversation = buildConversation(chosen, state.selfCallsign);
+    state.usedScenarioIds.add(chosen.id);
+    state.currentConversationIndex += 1;
+    state.currentStepIndex = 0;
     state.transcriptFinal = "";
 
-    els.taskModeText.textContent = `${scenario.title} · ${difficultyLabel(scenario.difficulty)}`;
-    els.taskText.textContent = scenario.promptText;
-    els.transcriptBox.textContent = "—";
-    setFeedback("Drücke die Sprechtaste und funke sauber.", "neutral");
-    els.progressText.textContent = `${state.currentIndex} / ${Math.min(config.maxTasksPerSession, state.filteredScenarios.length)}`;
+    els.taskModeText.textContent = `${chosen.title} · ${difficultyLabel(chosen.difficulty)}`;
+    els.situationText.textContent = chosen.situation || "—";
+    els.progressText.textContent = `${state.currentConversationIndex} / ${Math.min(config.maxConversationsPerSession, state.filteredScenarios.length)}`;
+    els.conversationStatus.textContent = "Gespräch aktiv.";
+    setFeedback("Das Gespräch startet jetzt.", "neutral");
 
-    if (els.autoReadToggle.checked) {
-      speakScenarioPrompt(scenario);
+    presentCurrentStep(true);
+  }
+
+  function presentCurrentStep(autoSpeak = true) {
+    const step = getCurrentStep();
+    if (!step || !state.currentConversation) return;
+
+    const studentSteps = state.currentConversation.steps.filter((entry) => entry.role === "student").length;
+    const currentStudentStep = countStudentStepsUntilIndex(state.currentConversation.steps, state.currentStepIndex);
+
+    els.stepText.textContent = studentSteps ? `${currentStudentStep} / ${studentSteps}` : "—";
+    els.transcriptBox.textContent = "—";
+    state.transcriptFinal = "";
+
+    if (step.role === "instruction") {
+      els.taskText.textContent = step.text;
+      els.conversationStatus.textContent = "Du musst jetzt selbst funken.";
+      if (autoSpeak && els.autoReadToggle.checked) {
+        speakPrompt(step.text);
+      }
+      return;
+    }
+
+    if (step.role === "pc") {
+      els.taskText.textContent = "Höre genau zu. Danach funke deine Antwort.";
+      els.conversationStatus.textContent = "Die Gegenstation spricht.";
+      if (autoSpeak && els.autoReadToggle.checked) {
+        speakIncoming(step.text, !!step.distorted);
+      }
+      return;
+    }
+
+    if (step.role === "student") {
+      els.taskText.textContent = "Jetzt bist du am Zug.";
+      els.conversationStatus.textContent = "Drücke die Sprechtaste und funke korrekt.";
     }
   }
 
-  function finishSession() {
-    state.sessionActive = false;
-    state.currentScenario = null;
-    els.taskModeText.textContent = "Training abgeschlossen";
-    els.taskText.textContent = "Gut gemacht. Du kannst links ein neues Training starten.";
-    els.transcriptBox.textContent = "—";
-    els.pttButton.disabled = true;
-    els.nextTaskBtn.disabled = true;
-    els.repeatTaskBtn.disabled = true;
-    els.showSolutionBtn.disabled = true;
-    playSfx("roundComplete");
+  function repeatCurrentStepPrompt() {
+    const step = getCurrentStep();
+    if (!step) return;
 
-    const summary = `Training fertig. Richtig: ${state.score.correct}, teilweise richtig: ${state.score.partial}, noch falsch: ${state.score.wrong}.`;
-    setFeedback(summary, "good");
-    speakText(summary);
+    if (step.role === "instruction") {
+      speakPrompt(step.text);
+    } else if (step.role === "pc") {
+      speakIncoming(step.text, !!step.distorted);
+    }
   }
 
-  function repeatCurrentTask() {
-    if (!state.currentScenario) return;
-    speakScenarioPrompt(state.currentScenario);
+  function speakPrompt(text) {
+    setReceiveState(true);
+    setTimeout(() => {
+      speakText(text, false, () => {
+        setReceiveState(false);
+        els.conversationStatus.textContent = "Jetzt bist du am Zug.";
+      });
+    }, 100);
   }
 
-  function showSolution() {
-    if (!state.currentScenario) return;
-
-    const solution = `Eine mögliche gute Lösung ist: ${state.currentScenario.solutionText}`;
-    setFeedback(solution, "partial");
-    speakText(state.currentScenario.solutionText);
-  }
-
-  function speakScenarioPrompt(scenario) {
+  function speakIncoming(text, distorted = false) {
     playSfx("incoming");
     setReceiveState(true);
+    els.taskText.textContent = text;
 
     setTimeout(() => {
-      speakText(scenario.promptText, () => {
+      speakText(text, distorted, () => {
         setReceiveState(false);
+        els.conversationStatus.textContent = "Jetzt antworte mit der Sprechtaste.";
       });
     }, 180);
   }
 
-  function speakText(text, onEnd) {
+  function speakText(text, distorted = false, onEnd) {
     if (!state.ttsSupported) {
       if (typeof onEnd === "function") onEnd();
       return;
     }
 
     window.speechSynthesis.cancel();
+    stopStaticNoise();
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = config.language;
-    utterance.rate = parseFloat(els.rateRange.value);
-    utterance.pitch = config.defaultPitch;
+    utterance.rate = distorted ? 0.8 : parseFloat(els.rateRange.value);
+    utterance.pitch = distorted ? 0.82 : config.defaultPitch;
     utterance.volume = parseFloat(els.speechVolumeRange.value);
 
-    const selectedVoice = state.voices.find(
-      (voice) => voice.name === els.voiceSelect.value
-    );
+    const selectedVoice = findVoiceForSpeech(distorted);
     if (selectedVoice) {
       utterance.voice = selectedVoice;
     }
 
-    utterance.onend = () => {
-      if (typeof onEnd === "function") onEnd();
-    };
-
-    utterance.onerror = () => {
-      if (typeof onEnd === "function") onEnd();
-    };
+    if (distorted && els.noiseToggle.checked) {
+      startStaticNoise();
+      utterance.onend = () => {
+        stopStaticNoise();
+        if (typeof onEnd === "function") onEnd();
+      };
+      utterance.onerror = () => {
+        stopStaticNoise();
+        if (typeof onEnd === "function") onEnd();
+      };
+    } else {
+      utterance.onend = () => {
+        if (typeof onEnd === "function") onEnd();
+      };
+      utterance.onerror = () => {
+        if (typeof onEnd === "function") onEnd();
+      };
+    }
 
     window.speechSynthesis.speak(utterance);
+  }
+
+  function findVoiceForSpeech(distorted = false) {
+    if (!state.voices.length) return null;
+
+    if (!distorted) {
+      return state.voices.find((voice) => voice.name === els.voiceSelect.value) || choosePreferredVoice();
+    }
+
+    const normal = state.voices.find((voice) => voice.name === els.voiceSelect.value) || choosePreferredVoice();
+    return state.voices.find(
+      (voice) => voice.lang.toLowerCase().startsWith("de") && (!normal || voice.name !== normal.name)
+    ) || normal;
   }
 
   function handlePttPress(event) {
@@ -441,13 +469,11 @@
       event.preventDefault();
     }
 
-    if (!state.sessionActive || !state.currentScenario || !state.recognitionSupported) {
-      return;
-    }
+    if (!state.sessionActive || !state.currentConversation || !state.recognitionSupported) return;
+    if (state.isRecognizing || state.pttPressed) return;
 
-    if (state.isRecognizing || state.pttPressed) {
-      return;
-    }
+    const currentStep = getCurrentStep();
+    if (!currentStep || currentStep.role !== "student") return;
 
     state.pttPressed = true;
     state.transcriptFinal = "";
@@ -505,8 +531,14 @@
     els.ledSend.classList.toggle("active", active);
   }
 
-  function evaluateCurrentTranscript() {
-    if (!state.currentScenario) return;
+  function getCurrentStep() {
+    if (!state.currentConversation) return null;
+    return state.currentConversation.steps[state.currentStepIndex] || null;
+  }
+
+  function evaluateCurrentStep() {
+    const step = getCurrentStep();
+    if (!step || step.role !== "student") return;
 
     const transcript = (state.transcriptFinal || "").trim();
 
@@ -514,84 +546,188 @@
       state.score.wrong += 1;
       updateScoreUI();
       playSfx("error");
-      setFeedback(
-        "Ich habe nichts Verständliches erkannt. Drücke die Sprechtaste und sprich klar und ruhig.",
-        "bad"
-      );
+      setFeedback("Ich habe nichts Verständliches erkannt. Drücke die Sprechtaste und sprich klar.", "bad");
       return;
     }
 
-    const result = evaluateTranscriptAgainstScenario(transcript, state.currentScenario);
+    const result = evaluateTranscript(transcript, step.evaluation);
 
     if (result.status === "correct") {
       state.score.correct += 1;
       updateScoreUI();
       playSfx("success");
       setFeedback(result.message, "good");
-      speakText("Gut gefunkt.");
-    } else if (result.status === "partial") {
+      proceedAfterCorrectStep();
+      return;
+    }
+
+    if (result.status === "partial") {
       state.score.partial += 1;
       updateScoreUI();
       playSfx("error");
       setFeedback(result.message, "partial");
-      speakText("Fast richtig.");
+      return;
+    }
+
+    state.score.wrong += 1;
+    updateScoreUI();
+    playSfx("error");
+    setFeedback(result.message, "bad");
+  }
+
+  function proceedAfterCorrectStep() {
+    els.conversationStatus.textContent = "Schritt richtig gelöst.";
+    state.currentStepIndex += 1;
+
+    if (!getCurrentStep()) {
+      finishConversation();
+      return;
+    }
+
+    while (getCurrentStep() && getCurrentStep().role === "pc") {
+      const pcStep = getCurrentStep();
+      speakIncoming(pcStep.text, !!pcStep.distorted);
+
+      const waitTime = estimateSpeechDuration(pcStep.text) + 200;
+      const nextIndex = state.currentStepIndex + 1;
+
+      setTimeout(() => {
+        state.currentStepIndex = nextIndex;
+
+        if (!getCurrentStep()) {
+          finishConversation();
+          return;
+        }
+
+        if (getCurrentStep().role === "pc") {
+          proceedAfterCorrectStepFromPcLoop();
+        } else {
+          presentCurrentStep(false);
+        }
+      }, waitTime);
+
+      return;
+    }
+
+    presentCurrentStep(true);
+  }
+
+  function proceedAfterCorrectStepFromPcLoop() {
+    while (getCurrentStep() && getCurrentStep().role === "pc") {
+      const pcStep = getCurrentStep();
+      speakIncoming(pcStep.text, !!pcStep.distorted);
+
+      const waitTime = estimateSpeechDuration(pcStep.text) + 200;
+      const nextIndex = state.currentStepIndex + 1;
+
+      setTimeout(() => {
+        state.currentStepIndex = nextIndex;
+        if (!getCurrentStep()) {
+          finishConversation();
+          return;
+        }
+
+        if (getCurrentStep().role === "pc") {
+          proceedAfterCorrectStepFromPcLoop();
+        } else {
+          presentCurrentStep(false);
+        }
+      }, waitTime);
+
+      return;
+    }
+
+    if (!getCurrentStep()) {
+      finishConversation();
+      return;
+    }
+
+    presentCurrentStep(false);
+  }
+
+  function finishConversation() {
+    els.conversationStatus.textContent = "Gespräch abgeschlossen.";
+    setFeedback("Gespräch sauber abgeschlossen. Gut gemacht.", "good");
+    playSfx("success");
+
+    if (state.currentConversationIndex >= Math.min(config.maxConversationsPerSession, state.filteredScenarios.length)) {
+      setTimeout(finishSession, 800);
     } else {
-      state.score.wrong += 1;
-      updateScoreUI();
-      playSfx("error");
-      setFeedback(result.message, "bad");
-      speakText("Noch nicht richtig.");
+      setTimeout(() => {
+        els.taskText.textContent = "Dieses Gespräch ist fertig. Klicke auf „Nächstes Gespräch“.";
+        els.stepText.textContent = "fertig";
+      }, 300);
     }
   }
 
-  function evaluateTranscriptAgainstScenario(rawTranscript, scenario) {
-    const normalized = normalizeText(rawTranscript);
-    const evalRules = scenario.evaluation;
+  function finishSession() {
+    state.sessionActive = false;
+    state.currentConversation = null;
+    els.taskModeText.textContent = "Training abgeschlossen";
+    els.taskText.textContent = "Gut gemacht. Du kannst links ein neues Training starten.";
+    els.stepText.textContent = "—";
+    els.situationText.textContent = "—";
+    els.transcriptBox.textContent = "—";
+    els.pttButton.disabled = true;
+    els.nextTaskBtn.disabled = true;
+    els.repeatTaskBtn.disabled = true;
+    els.showSolutionBtn.disabled = true;
+    els.conversationStatus.textContent = "Kein Gespräch aktiv.";
+    playSfx("roundComplete");
 
+    const summary = `Training fertig. Richtig: ${state.score.correct}, teilweise richtig: ${state.score.partial}, noch falsch: ${state.score.wrong}.`;
+    setFeedback(summary, "good");
+    speakText(summary, false);
+  }
+
+  function showSolution() {
+    const step = getCurrentStep();
+    if (!step || step.role !== "student") return;
+
+    const solution = `Eine passende Lösung ist: ${step.expectedResponse}`;
+    setFeedback(solution, "partial");
+    speakText(step.expectedResponse, false);
+  }
+
+  function evaluateTranscript(rawTranscript, evaluationRules) {
+    const normalized = normalizeText(rawTranscript);
     let score = 0;
     let maxScore = 0;
-    let issues = [];
+    const issues = [];
 
-    if (evalRules.requiredAny?.length) {
+    if (evaluationRules.requiredAny?.length) {
       maxScore += 1;
-      if (containsAny(normalized, evalRules.requiredAny)) {
+      if (containsAny(normalized, evaluationRules.requiredAny)) {
         score += 1;
       } else {
-        issues.push(evalRules.tips?.missingCore || "Wichtiger Inhalt fehlt.");
+        issues.push(evaluationRules.tips?.missingCore || "Wichtiger Inhalt fehlt.");
       }
     }
 
-    if (evalRules.requiredNumberAny?.length) {
+    if (evaluationRules.requiredNumberAny?.length) {
       maxScore += 1;
-      if (containsAny(normalized, evalRules.requiredNumberAny)) {
+      if (containsAny(normalized, evaluationRules.requiredNumberAny)) {
         score += 1;
       } else {
-        issues.push("Die Zeit- oder Zahlangabe fehlt oder wurde nicht klar erkannt.");
+        issues.push("Zeit oder Zahl fehlt oder wurde nicht klar erkannt.");
       }
     }
 
-    if (evalRules.requiredClosingAny?.length) {
+    if (evaluationRules.requiredClosingAny?.length) {
       maxScore += 1;
-      if (containsAny(normalized, evalRules.requiredClosingAny)) {
+      if (containsAny(normalized, evaluationRules.requiredClosingAny)) {
         score += 1;
       } else {
-        issues.push(evalRules.tips?.missingClosing || "Das Funkwort am Schluss fehlt.");
+        issues.push(evaluationRules.tips?.missingClosing || "Das Funkwort am Schluss fehlt.");
       }
     }
 
-    if (evalRules.requiredOrderedAny?.length) {
+    if (evaluationRules.requiredOrderedAny?.length) {
       maxScore += 1;
-      if (containsOrderedGroups(normalized, evalRules.requiredOrderedAny)) {
+      if (containsOrderedGroups(normalized, evaluationRules.requiredOrderedAny)) {
         score += 1;
       } else {
-        issues.push(evalRules.tips?.missingCore || "Die Reihenfolge im Funkspruch stimmt noch nicht.");
-      }
-    }
-
-    if (evalRules.preferredAny?.length) {
-      maxScore += 1;
-      if (containsAny(normalized, evalRules.preferredAny)) {
-        score += 1;
+        issues.push(evaluationRules.tips?.missingCore || "Die Reihenfolge stimmt noch nicht.");
       }
     }
 
@@ -600,7 +736,7 @@
     if (ratio >= 0.8) {
       return {
         status: "correct",
-        message: "Sehr gut. Inhalt und Funkdisziplin passen."
+        message: "Sehr gut. Inhalt und schweizerische Funkdisziplin passen."
       };
     }
 
@@ -617,12 +753,11 @@
     };
   }
 
-  function uniqueIssues(list) {
-    return [...new Set(list.filter(Boolean))];
-  }
-
   function containsAny(text, variants) {
-    return variants.some((variant) => text.includes(normalizeText(variant)));
+    return variants.some((variant) => {
+      const prepared = prepareRuleVariant(variant);
+      return text.includes(prepared);
+    });
   }
 
   function containsOrderedGroups(text, orderedGroups) {
@@ -632,8 +767,8 @@
       let foundIndex = -1;
 
       for (const variant of group) {
-        const normalizedVariant = normalizeText(variant);
-        const index = text.indexOf(normalizedVariant, lastIndex + 1);
+        const prepared = prepareRuleVariant(variant);
+        const index = text.indexOf(prepared, lastIndex + 1);
         if (index !== -1) {
           foundIndex = index;
           break;
@@ -650,6 +785,10 @@
     return true;
   }
 
+  function prepareRuleVariant(variant) {
+    return normalizeText(replaceSelfPlaceholder(String(variant), state.selfCallsign));
+  }
+
   function normalizeText(text) {
     return String(text)
       .toLowerCase()
@@ -660,6 +799,68 @@
       .replace(/ö/g, "oe")
       .replace(/ü/g, "ue")
       .replace(/[.,/#!$%^&*;:{}=\-_`~()?¿!'"[\]\\]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function replaceSelfPlaceholder(text, selfCallsign) {
+    return String(text).replace(/\{SELF\}|\{self\}/g, selfCallsign);
+  }
+
+  function buildConversation(template, selfCallsign) {
+    const clone = JSON.parse(JSON.stringify(template));
+
+    clone.steps = clone.steps.map((step) => {
+      const nextStep = { ...step };
+
+      if (typeof nextStep.text === "string") {
+        nextStep.text = replaceSelfPlaceholder(nextStep.text, selfCallsign);
+      }
+
+      if (typeof nextStep.expectedResponse === "string") {
+        nextStep.expectedResponse = replaceSelfPlaceholder(nextStep.expectedResponse, selfCallsign);
+      }
+
+      if (nextStep.evaluation) {
+        const evalClone = JSON.parse(JSON.stringify(nextStep.evaluation));
+        evalClone.requiredAny = (evalClone.requiredAny || []).map((item) =>
+          replaceSelfPlaceholder(item, selfCallsign)
+        );
+        evalClone.requiredClosingAny = (evalClone.requiredClosingAny || []).map((item) =>
+          replaceSelfPlaceholder(item, selfCallsign)
+        );
+        evalClone.requiredNumberAny = (evalClone.requiredNumberAny || []).map((item) =>
+          replaceSelfPlaceholder(item, selfCallsign)
+        );
+        evalClone.requiredOrderedAny = (evalClone.requiredOrderedAny || []).map((group) =>
+          group.map((item) => replaceSelfPlaceholder(item, selfCallsign))
+        );
+        nextStep.evaluation = evalClone;
+      }
+
+      return nextStep;
+    });
+
+    return clone;
+  }
+
+  function countStudentStepsUntilIndex(steps, index) {
+    let count = 0;
+    for (let i = 0; i <= index; i += 1) {
+      if (steps[i] && steps[i].role === "student") {
+        count += 1;
+      }
+    }
+    return count || 1;
+  }
+
+  function uniqueIssues(items) {
+    return [...new Set(items.filter(Boolean))];
+  }
+
+  function sanitizeCallsign(text) {
+    return String(text || "")
+      .replace(/[^A-Za-zÀ-ÿÄÖÜäöüß\s-]/g, "")
       .replace(/\s+/g, " ")
       .trim();
   }
@@ -682,6 +883,11 @@
     return value;
   }
 
+  function estimateSpeechDuration(text) {
+    const words = String(text).trim().split(/\s+/).filter(Boolean).length;
+    return Math.max(1500, words * 420);
+  }
+
   function resetApp() {
     window.speechSynthesis?.cancel();
 
@@ -699,8 +905,9 @@
     setSendState(false);
 
     state.sessionActive = false;
-    state.currentScenario = null;
-    state.currentIndex = 0;
+    state.currentConversation = null;
+    state.currentConversationIndex = 0;
+    state.currentStepIndex = 0;
     state.usedScenarioIds.clear();
     state.transcriptFinal = "";
     state.score.correct = 0;
@@ -710,14 +917,17 @@
 
     els.taskModeText.textContent = "Noch kein Training gestartet";
     els.taskText.textContent = "Wähle links einen Modus und starte das Training.";
+    els.stepText.textContent = "—";
+    els.situationText.textContent = "—";
     els.transcriptBox.textContent = "—";
-    setFeedback("Die App achtet auf Inhalt und Funkdisziplin.", "neutral");
     els.progressText.textContent = "0 / 0";
     els.pttButton.disabled = true;
     els.nextTaskBtn.disabled = true;
     els.repeatTaskBtn.disabled = true;
     els.showSolutionBtn.disabled = true;
     els.pttHint.textContent = "Bereit";
+    els.conversationStatus.textContent = "Noch kein Gespräch aktiv.";
+    setFeedback("Die App prüft Reihenfolge, Inhalt und schweizerische Funkwörter.", "neutral");
   }
 
   init();
