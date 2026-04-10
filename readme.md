@@ -1,19 +1,34 @@
 # Funksimulator
 
-Eine einfache Web-App für GitHub Pages, mit der Kinder im Alter von ca. 10–12 Jahren korrektes Funken üben können.
+Eine statische Web-App für GitHub Pages, mit der Kinder im Alter von ca. 10–12 Jahren schweizerische Funksprache üben können.
 
 ## Funktionen
 
-- kindgerechte Funkübungen
+- kindgerechte Funksimulation
 - Browser-Spracherkennung
 - Text-to-Speech
 - Sprechtaste
-- Rückmeldung zu Inhalt und Funkdisziplin
-- mehrere Modi:
-  - Angerufen werden
-  - Gespräch beginnen
-  - Gespräch beenden
-  - Wiederholen nach Störung
+- Rückmeldung zu Inhalt, Reihenfolge und Funkvokabular
+- echte Gesprächslogik in mehreren Schritten
+
+## Verwendetes schweizerisches Funkvokabular
+
+Die App ist auf diese Muster ausgerichtet:
+
+- `Bruno von Anna, antworten`
+- `Anna von Bruno, verstanden, antworten`
+- `Nicht verstanden, wiederholen, antworten`
+- `Ich wiederhole, ... , antworten`
+- `Richtig, Schluss`
+- `Schluss`
+
+## Modi
+
+- Angerufen werden
+- Gespräch beginnen
+- Gespräch beenden
+- PC versteht dich nicht
+- Du verstehst den PC nicht
 
 ## Technik
 
@@ -30,18 +45,11 @@ Empfohlen:
 
 ## GitHub Pages
 
-Die App ist als statische Webseite aufgebaut und kann direkt über GitHub Pages veröffentlicht werden.
-
-## Wichtiger Hinweis
-
-Die Browser-Spracherkennung ist nie perfekt. Deshalb arbeitet die App tolerant und prüft nicht nur den exakten Wortlaut, sondern vor allem:
-- wichtige Wörter
-- Funkreihenfolge
-- korrektes Beenden
+Die App kann direkt als statische Webseite auf GitHub Pages veröffentlicht werden.
 
 ## Audio-Dateien
 
-Lege diese Dateien im Ordner `audio/sfx/` ab:
+Lege diese Dateien in `audio/sfx/` ab:
 
 - `ptt-down.wav`
 - `ptt-up-beep.wav`
@@ -51,12 +59,12 @@ Lege diese Dateien im Ordner `audio/sfx/` ab:
 - `message-incoming.wav`
 - `round-complete.wav`
 
-## Nächste sinnvolle Ausbaustufen
+## Hinweis
 
-- echter Prüfungsmodus
-- Punkte pro Teilkriterium
-- strengere Funkregeln
-- NATO-Alphabet
-- Morsen
-- eigene Rufnamen
-- Audiofilter für echten Funkklang
+Die Browser-Spracherkennung ist nicht perfekt. Deshalb bewertet die App tolerant und prüft vor allem:
+
+- Reihenfolge
+- Rufnamen
+- wichtige Inhaltswörter
+- korrekte Funkwörter
+- korrektes Gesprächsende
