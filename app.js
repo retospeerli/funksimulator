@@ -33,9 +33,12 @@
     difficultySelect: document.getElementById("difficultySelect"),
     noiseToggle: document.getElementById("noiseToggle"),
 
-    sndButton: document.getElementById("sndButton"),
-    sndBeep: document.getElementById("sndBeep"),
-    sndNoise: document.getElementById("sndNoise")
+    sndClick: document.getElementById("sndClick"),
+    sndPttDown: document.getElementById("sndPttDown"),
+    sndPttUp: document.getElementById("sndPttUp"),
+    sndNoise: document.getElementById("sndNoise"),
+    sndError: document.getElementById("sndError"),
+    sndSuccess: document.getElementById("sndSuccess")
   };
 
   const state = {
@@ -255,8 +258,15 @@
   }
 
   function bindEvents() {
-    els.newTaskBtn.addEventListener("click", loadNewTask);
-    els.startBtn.addEventListener("click", startTask);
+    els.newTaskBtn.addEventListener("click", () => {
+      playSound("click");
+      loadNewTask();
+    });
+
+    els.startBtn.addEventListener("click", () => {
+      playSound("click");
+      startTask();
+    });
 
     els.pttBtn.addEventListener("mousedown", startPtt);
     els.pttBtn.addEventListener("touchstart", (e) => {
@@ -275,6 +285,7 @@
         els.keyName.textContent = state.pttLabel;
         state.chooseKeyMode = false;
         els.chooseKeyBtn.textContent = "Taste definieren";
+        playSound("click");
         return;
       }
 
@@ -292,16 +303,35 @@
     });
 
     els.chooseKeyBtn.addEventListener("click", () => {
+      playSound("click");
       state.chooseKeyMode = true;
       els.chooseKeyBtn.textContent = "Taste drücken …";
     });
 
-    els.helpBtn.addEventListener("click", () => els.helpDialog.showModal());
-    els.closeHelpBtn.addEventListener("click", () => els.helpDialog.close());
+    els.helpBtn.addEventListener("click", () => {
+      playSound("click");
+      els.helpDialog.showModal();
+    });
 
-    els.settingsBtn.addEventListener("click", openSettings);
-    els.cancelSettingsBtn.addEventListener("click", cancelSettings);
-    els.okSettingsBtn.addEventListener("click", saveSettings);
+    els.closeHelpBtn.addEventListener("click", () => {
+      playSound("click");
+      els.helpDialog.close();
+    });
+
+    els.settingsBtn.addEventListener("click", () => {
+      playSound("click");
+      openSettings();
+    });
+
+    els.cancelSettingsBtn.addEventListener("click", () => {
+      playSound("click");
+      cancelSettings();
+    });
+
+    els.okSettingsBtn.addEventListener("click", () => {
+      playSound("click");
+      saveSettings();
+    });
   }
 
   function openSettings() {
@@ -392,7 +422,7 @@
 
     setStatus("Empfangen");
     setRadio("receive");
-    playSound("button");
+    playSound("click");
 
     if (step.distorted) {
       startNoise(0.9);
@@ -423,7 +453,7 @@
     els.feedbackText.textContent = "PTT offen. Kurz warten, dann sprechen.";
     setStatus("Senden");
     setRadio("send");
-    playSound("button");
+    playSound("pttDown");
     startNoise(0.25);
 
     state.userStartDelay = setTimeout(() => {
@@ -443,7 +473,7 @@
 
     state.pttDown = false;
     els.pttBtn.classList.remove("active");
-    playSound("beep");
+    playSound("pttUp");
 
     clearTimeout(state.userStartDelay);
 
@@ -468,10 +498,12 @@
     const result = compare(heard, expected);
 
     if (result.ok) {
+      playSound("error");
       els.feedbackText.textContent = "Richtig. Der Funkverkehr geht weiter.";
       state.step++;
       setTimeout(runStep, 600);
     } else {
+      playSound("success");
       els.feedbackText.textContent = `Noch nicht korrekt. Erwartet: ${expected}`;
     }
   }
@@ -533,7 +565,17 @@
   }
 
   function playSound(name) {
-    const el = name === "button" ? els.sndButton : els.sndBeep;
+    const sounds = {
+      click: els.sndClick,
+      pttDown: els.sndPttDown,
+      pttUp: els.sndPttUp,
+      error: els.sndError,
+      success: els.sndSuccess
+    };
+
+    const el = sounds[name];
+    if (!el) return;
+
     try {
       el.pause();
       el.currentTime = 0;
@@ -543,6 +585,7 @@
 
   function startNoise(volume = 0.25) {
     if (!els.noiseToggle.checked) return;
+
     try {
       els.sndNoise.volume = volume;
       els.sndNoise.currentTime = 0;
@@ -559,9 +602,16 @@
 
   function stopAllAudio() {
     stopNoise();
+
     if (synth) synth.cancel();
 
-    [els.sndButton, els.sndBeep].forEach((audio) => {
+    [
+      els.sndClick,
+      els.sndPttDown,
+      els.sndPttUp,
+      els.sndError,
+      els.sndSuccess
+    ].forEach((audio) => {
       try {
         audio.pause();
         audio.currentTime = 0;
