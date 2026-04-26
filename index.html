@@ -4,12 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Funksimulator</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
   <header class="topbar">
-    <div>
+    <div class="brand">
       <h1>Funksimulator</h1>
       <p>Schweizer Funksprache üben</p>
     </div>
@@ -20,21 +20,24 @@
     </div>
   </header>
 
-  <main class="layout">
-    <section class="card assignment-card">
-      <h2>Auftragskarte</h2>
+  <main class="app-layout">
+    <section class="assignment-card">
+      <div class="card-header">
+        <span class="pill">Auftragskarte</span>
+        <h2 id="taskTitle">Neue Aufgabe</h2>
+      </div>
 
-      <div class="assignment-block">
+      <div class="info-block">
         <h3>Ziel der Übung</h3>
-        <p id="goalText">–</p>
+        <p id="goalText">Starte eine neue Aufgabe.</p>
       </div>
 
-      <div class="assignment-block">
+      <div class="info-block">
         <h3>Dein Auftrag</h3>
-        <p id="taskText">–</p>
+        <p id="taskText">Lies die Karte und klicke auf „Loslegen“.</p>
       </div>
 
-      <div class="assignment-info">
+      <div class="mission-grid">
         <div>
           <span>Treffpunkt</span>
           <strong id="placeText">–</strong>
@@ -45,50 +48,62 @@
         </div>
       </div>
 
-      <button id="newTaskBtn" class="primary-btn" type="button">Neue Aufgabe</button>
-      <button id="startBtn" class="green-btn" type="button" disabled>Loslegen</button>
+      <div class="hint-box">
+        <h3>Merksatz</h3>
+        <p id="hintText">Zuerst Empfänger, dann „von“, dann eigener Rufname.</p>
+      </div>
+
+      <div class="assignment-actions">
+        <button id="newTaskBtn" class="primary-btn" type="button">Neue Aufgabe</button>
+        <button id="startBtn" class="green-btn" type="button" disabled>Loslegen</button>
+      </div>
     </section>
 
-    <section class="card radio-card">
-      <h2>Funkgerät</h2>
+    <section class="radio-card">
+      <div class="card-header">
+        <span class="pill">Funkgerät</span>
+        <h2>Simulation</h2>
+      </div>
 
-      <div class="radio-area">
-        <img id="radioImage" src="img/standby.png" class="radio-img">
+      <div class="radio-layout">
+        <div class="radio-visual">
+          <img id="radioImage" src="./img/standby.png" alt="Funkgerät" class="radio-img">
+        </div>
 
-        <div class="radio-side">
+        <div class="control-panel">
           <div class="status-box">
             <span>Status</span>
             <strong id="statusText">Bereit</strong>
           </div>
 
           <div class="status-box">
-            <span>Gehört</span>
+            <span>Erkannt</span>
             <p id="heardText">Noch keine Aufnahme.</p>
           </div>
 
-          <div class="status-box">
-            <span>Feedback</span>
+          <div class="status-box feedback">
+            <span>Rückmeldung</span>
             <p id="feedbackText">–</p>
           </div>
 
-          <button id="pttBtn" class="ptt-btn" disabled>
-            Sprechtaste
+          <button id="pttBtn" class="ptt-btn" type="button" disabled>
+            <span>Sprechtaste</span>
             <small>gedrückt halten</small>
           </button>
 
-          <button id="chooseKeyBtn" class="secondary-btn">Taste definieren</button>
-          <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
+          <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
+          <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
         </div>
       </div>
     </section>
   </main>
 
-  <dialog id="settingsDialog">
+  <dialog id="settingsDialog" class="dialog-box">
     <h2>Einstellungen</h2>
 
     <label>
       Rufname
-      <input id="nameInput" type="text" value="Anna">
+      <input id="nameInput" type="text" value="Anna" autocomplete="off">
     </label>
 
     <label>
@@ -109,37 +124,36 @@
       </select>
     </label>
 
-    <label class="check">
+    <label class="check-row">
       <input id="noiseToggle" type="checkbox" checked>
-      Funkrauschen
+      Funkrauschen aktivieren
     </label>
 
     <menu>
-      <button id="cancelSettingsBtn">Abbrechen</button>
-      <button id="okSettingsBtn">OK</button>
+      <button id="cancelSettingsBtn" class="secondary-btn" type="button">Abbrechen</button>
+      <button id="okSettingsBtn" class="primary-btn" type="button">OK</button>
     </menu>
   </dialog>
 
-  <dialog id="helpDialog">
+  <dialog id="helpDialog" class="dialog-box">
     <h2>Hilfe</h2>
-    <p>„Bruno von Anna, verstanden, antworten“</p>
-    <p>„Nicht verstanden, wiederholen, antworten“</p>
-    <p>„Ich wiederhole …“</p>
-    <p>„Richtig, Schluss“</p>
+    <p><strong>Antworten:</strong> „Bruno von Anna, verstanden, antworten“</p>
+    <p><strong>Nicht verstanden:</strong> „Nicht verstanden, wiederholen, antworten“</p>
+    <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
+    <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
     <menu>
-      <button id="closeHelpBtn">OK</button>
+      <button id="closeHelpBtn" class="primary-btn" type="button">OK</button>
     </menu>
   </dialog>
 
-  <!-- AUDIO -->
-  <audio id="sndClick" src="audio/sfx/click-soft.wav"></audio>
-  <audio id="sndPttDown" src="audio/sfx/ptt-down.wav"></audio>
-  <audio id="sndPttUp" src="audio/sfx/ptt-up-beep.wav"></audio>
-  <audio id="sndBuzz" src="audio/sfx/buzz.wav"></audio>
-  <audio id="sndNoise" src="audio/sfx/static-low.mp3" loop></audio>
-  <audio id="sndError" src="audio/sfx/error.wav"></audio>
-  <audio id="sndSuccess" src="audio/sfx/success.wav"></audio>
+  <audio id="sndClick" src="./audio/sfx/click-soft.wav" preload="auto"></audio>
+  <audio id="sndPttDown" src="./audio/sfx/ptt-down.wav" preload="auto"></audio>
+  <audio id="sndPttUp" src="./audio/sfx/ptt-up-beep.wav" preload="auto"></audio>
+  <audio id="sndBuzz" src="./audio/sfx/buzz.wav" preload="auto"></audio>
+  <audio id="sndNoise" src="./audio/sfx/static-low.mp3" preload="auto" loop></audio>
+  <audio id="sndError" src="./audio/sfx/error.wav" preload="auto"></audio>
+  <audio id="sndSuccess" src="./audio/sfx/success.wav" preload="auto"></audio>
 
-  <script src="app.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>
