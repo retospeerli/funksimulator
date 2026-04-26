@@ -1,36 +1,28 @@
 :root {
-  --bg: #efe6d5;
-  --paper: #fff8ed;
+  --bg: #ece4d6;
   --card: rgba(255, 255, 255, 0.92);
-  --dark: #182232;
-  --muted: #6b7280;
-  --line: #d6c7ae;
-  --blue: #245db7;
-  --blue-dark: #173f82;
-  --green: #228b3a;
-  --green-dark: #17652a;
-  --red: #b83232;
-  --shadow: 0 18px 45px rgba(25, 20, 10, 0.18);
-  --radius: 24px;
-  --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --line: #d2c6b4;
+  --text: #172033;
+  --muted: #667085;
+  --blue: #245fc7;
+  --green: #24913a;
+  --red: #b92b2b;
+  --shadow: 0 14px 32px rgba(30, 25, 15, 0.16);
 }
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  min-height: 100%;
-}
-
+html,
 body {
   margin: 0;
-  min-height: 100vh;
-  font-family: var(--font);
-  color: var(--dark);
-  background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.9), transparent 28%),
-    linear-gradient(135deg, #f8f1e6, var(--bg));
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, #f7f1e8, var(--bg));
 }
 
 button,
@@ -39,199 +31,115 @@ select {
   font: inherit;
 }
 
-button {
-  user-select: none;
-}
-
 .topbar {
-  min-height: 92px;
-  padding: 20px 36px;
+  height: 70px;
+  padding: 12px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 248, 237, 0.86);
+  background: rgba(255,255,255,0.78);
   border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(8px);
 }
 
-.brand h1 {
+.topbar h1 {
   margin: 0;
-  font-size: clamp(1.8rem, 3vw, 2.4rem);
-  line-height: 1.05;
+  font-size: clamp(1.35rem, 2vw, 2rem);
 }
 
-.brand p {
-  margin: 6px 0 0;
+.topbar p {
+  margin: 2px 0 0;
   color: var(--muted);
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .top-actions {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  gap: 10px;
 }
 
-.app-layout {
-  width: min(1500px, 96vw);
-  margin: 0 auto;
-  padding: 28px 0 36px;
+.layout {
+  height: calc(100vh - 70px);
+  padding: 14px;
   display: grid;
-  grid-template-columns: minmax(360px, 0.9fr) minmax(560px, 1.1fr);
-  gap: 28px;
+  grid-template-columns: 30% 40% 30%;
+  gap: 14px;
   align-items: stretch;
 }
 
-.assignment-card,
+/* linke Spalte: Aufgabenkarte */
+.assignment-card {
+  grid-column: 1;
+}
+
+/* Mitte: Funkgerät */
 .radio-card {
-  min-height: calc(100vh - 156px);
+  grid-column: 2;
+}
+
+/* Rechte Spalte: Bedienung innerhalb radio-card wird optisch rechts gehalten */
+.card {
   background: var(--card);
   border: 1px solid rgba(0,0,0,0.08);
-  border-radius: var(--radius);
+  border-radius: 18px;
   box-shadow: var(--shadow);
-  padding: 26px;
+  padding: 14px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.card h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.1rem, 1.4vw, 1.45rem);
 }
 
 .assignment-card {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.card-header {
-  margin-bottom: 22px;
-}
-
-.card-header h2 {
-  margin: 10px 0 0;
-  font-size: clamp(1.5rem, 2.2vw, 2rem);
-}
-
-.pill {
-  display: inline-block;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #eaf2ff;
-  border: 1px solid #c8dcff;
-  color: var(--blue-dark);
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-
-.info-block,
-.hint-box {
-  background: var(--paper);
+.assignment-block {
+  background: white;
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 18px;
-  margin-bottom: 16px;
+  border-radius: 14px;
+  padding: 12px;
+  min-height: 0;
 }
 
-.info-block h3,
-.hint-box h3 {
-  margin: 0 0 10px;
+.assignment-block h3 {
+  margin: 0 0 6px;
   color: var(--blue);
-  font-size: 1.05rem;
+  font-size: clamp(0.9rem, 1.1vw, 1.05rem);
 }
 
-.info-block p,
-.hint-box p {
+.assignment-block p {
   margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.5;
+  line-height: 1.35;
+  font-size: clamp(0.88rem, 1.1vw, 1.05rem);
 }
 
-.mission-grid {
+.assignment-info {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin: 4px 0 16px;
+  gap: 10px;
 }
 
-.mission-grid div {
-  background: #edf5ff;
+.assignment-info div {
+  background: #eef5ff;
   border: 1px solid #c7dcff;
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 13px;
+  padding: 10px;
 }
 
-.mission-grid span {
+.assignment-info span {
   display: block;
   color: var(--muted);
-  margin-bottom: 6px;
+  font-size: 0.82rem;
+  margin-bottom: 3px;
 }
 
-.mission-grid strong {
-  font-size: 1.18rem;
-}
-
-.assignment-actions {
-  margin-top: auto;
-  display: grid;
-  gap: 12px;
-}
-
-.radio-layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 1fr) 270px;
-  gap: 24px;
-  align-items: center;
-}
-
-.radio-visual {
-  min-height: 520px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.radio-img {
-  width: 100%;
-  max-height: calc(100vh - 250px);
-  object-fit: contain;
-  filter: drop-shadow(0 22px 28px rgba(0,0,0,0.28));
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-
-.radio-img.switching {
-  opacity: 0.62;
-  transform: scale(0.992);
-}
-
-.control-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.status-box {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 15px;
-}
-
-.status-box span {
-  display: block;
-  color: var(--blue);
-  text-transform: uppercase;
-  font-weight: 900;
-  font-size: 0.84rem;
-  letter-spacing: 0.05em;
-  margin-bottom: 6px;
-}
-
-.status-box strong {
-  font-size: 1.15rem;
-}
-
-.status-box p {
-  margin: 0;
-  min-height: 1.4em;
-  line-height: 1.4;
-}
-
-.feedback p {
-  font-weight: 650;
+.assignment-info strong {
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
 }
 
 .primary-btn,
@@ -240,10 +148,261 @@ button {
 .small-btn,
 .ptt-btn {
   border: 0;
-  border-radius: 16px;
+  border-radius: 13px;
   cursor: pointer;
-  font-weight: 800;
-  transition: transform 120ms ease, opacity 120ms ease, filter 120ms ease;
+  font-weight: 750;
 }
 
-.primary-btn:hover:not(:disabled),
+.primary-btn,
+.green-btn,
+.secondary-btn {
+  width: 100%;
+}
+
+.primary-btn {
+  background: var(--blue);
+  color: white;
+  padding: 12px;
+}
+
+.green-btn {
+  background: var(--green);
+  color: white;
+  padding: 14px;
+  font-size: 1.05rem;
+}
+
+.secondary-btn,
+.small-btn {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 11px 14px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Funkgerät-Mittelspalte */
+.radio-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.radio-area {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 10px;
+}
+
+.radio-img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.22));
+}
+
+/* Die bisherige rechte Bedienbox wird im Funkgerät unten kompakt */
+.radio-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.status-box {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 10px;
+  min-height: 72px;
+  overflow: hidden;
+}
+
+.status-box span {
+  display: block;
+  color: var(--blue);
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+}
+
+.status-box p {
+  margin: 0;
+  line-height: 1.25;
+  font-size: 0.85rem;
+}
+
+.status-box strong {
+  font-size: 0.95rem;
+}
+
+.ptt-btn {
+  min-height: 72px;
+  background: linear-gradient(180deg, #4b4b4b, #202020);
+  color: white;
+  font-size: 1rem;
+  box-shadow: inset 0 -5px 0 rgba(0,0,0,0.26);
+}
+
+.ptt-btn small {
+  display: block;
+  font-weight: 500;
+  font-size: 0.76rem;
+  margin-top: 4px;
+}
+
+.ptt-btn.active {
+  transform: translateY(2px);
+  box-shadow: inset 0 5px 0 rgba(0,0,0,0.28);
+}
+
+.key-info {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+/* Dialoge */
+dialog {
+  border: 0;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 22px;
+  width: min(480px, 92vw);
+}
+
+dialog::backdrop {
+  background: rgba(0,0,0,0.48);
+  backdrop-filter: blur(4px);
+}
+
+dialog h2 {
+  margin-top: 0;
+}
+
+dialog label {
+  display: block;
+  margin: 14px 0;
+  font-weight: 650;
+}
+
+dialog input,
+dialog select {
+  margin-top: 7px;
+  width: 100%;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+dialog .check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+dialog .check input {
+  width: auto;
+  margin: 0;
+}
+
+dialog menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0;
+  margin: 20px 0 0;
+}
+
+/* bei kleineren Fenstern bleibt es dreigeteilt */
+@media (max-width: 950px) {
+  .layout {
+    grid-template-columns: 32% 38% 30%;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .card {
+    padding: 10px;
+    border-radius: 14px;
+  }
+
+  .assignment-info {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .radio-side {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .status-box {
+    min-height: 54px;
+    padding: 8px;
+  }
+
+  .ptt-btn {
+    min-height: 62px;
+  }
+
+  .topbar {
+    height: 62px;
+    padding: 8px 12px;
+  }
+
+  .layout {
+    height: calc(100vh - 62px);
+  }
+}
+
+@media (max-width: 680px) {
+  .topbar p {
+    display: none;
+  }
+
+  .top-actions {
+    gap: 6px;
+  }
+
+  .small-btn {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .layout {
+    grid-template-columns: 34% 36% 30%;
+  }
+
+  .card h2 {
+    font-size: 1rem;
+  }
+
+  .assignment-block {
+    padding: 8px;
+  }
+
+  .assignment-block p {
+    font-size: 0.78rem;
+  }
+
+  .assignment-block h3 {
+    font-size: 0.82rem;
+  }
+
+  .green-btn,
+  .primary-btn,
+  .secondary-btn {
+    padding: 9px;
+    font-size: 0.82rem;
+  }
+}
