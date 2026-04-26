@@ -7,252 +7,137 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <h1>Funksimulator</h1>
-        <p class="subtitle">Schweizer Funksprache üben: korrekt, kurz und klar</p>
-      </div>
-      <div class="topbar-actions">
-        <button id="openSettingsBtn" class="secondary-btn">Einstellungen</button>
-        <div class="status-badges">
-          <span id="speechSupportBadge" class="badge">Spracherkennung wird geprüft …</span>
-          <span id="ttsSupportBadge" class="badge">TTS wird geprüft …</span>
-        </div>
-      </div>
-    </header>
-
-    <main class="main-grid">
-      <aside class="panel panel-left">
-        <h2>Training</h2>
-
-        <div class="field">
-          <span>Trainingsart</span>
-          <select id="modeSelect">
-            <option value="receive">Angerufen werden</option>
-            <option value="start">Gespräch beginnen</option>
-            <option value="end">Gespräch beenden</option>
-            <option value="notunderstood_pc">PC versteht dich nicht</option>
-            <option value="notunderstood_student">Du verstehst den PC nicht</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <span>Schwierigkeit</span>
-          <select id="difficultySelect">
-            <option value="easy">Leicht</option>
-            <option value="medium">Mittel</option>
-            <option value="hard">Schwer</option>
-          </select>
-        </div>
-
-        <div class="button-group vertical">
-          <button id="startSessionBtn" class="primary-btn">Neues Gespräch</button>
-          <button id="nextTaskBtn" class="secondary-btn" disabled>Nächstes Gespräch</button>
-          <button id="repeatTaskBtn" class="secondary-btn" disabled>Schritt wiederholen</button>
-          <button id="showSolutionBtn" class="secondary-btn" disabled>Lösung zeigen</button>
-          <button id="resetBtn" class="danger-btn">Zurücksetzen</button>
-        </div>
-
-        <h2>Punkte</h2>
-        <div class="score-box">
-          <div class="score-row">
-            <span>Richtig</span>
-            <strong id="scoreCorrect">0</strong>
-          </div>
-          <div class="score-row">
-            <span>Teilweise richtig</span>
-            <strong id="scorePartial">0</strong>
-          </div>
-          <div class="score-row">
-            <span>Noch falsch</span>
-            <strong id="scoreWrong">0</strong>
-          </div>
-        </div>
-
-        <h2>Gesprächsstatus</h2>
-        <div class="note-box">
-          <p id="conversationStatus">Noch kein Gespräch aktiv.</p>
-        </div>
-      </aside>
-
-      <section class="panel panel-center">
-        <div class="radio-frame">
-          <div class="radio-header">
-            <div class="radio-label">Schul-Funkgerät</div>
-            <div class="led-row">
-              <span class="led led-green active"></span>
-              <span id="ledReceive" class="led led-blue"></span>
-              <span id="ledSend" class="led led-red"></span>
-            </div>
-          </div>
-
-          <div class="display">
-            <div class="display-row">
-              <span class="display-label">Gespräch</span>
-              <span id="progressText" class="display-value">0 / 0</span>
-            </div>
-
-            <div id="taskModeText" class="task-mode">Noch kein Training gestartet</div>
-            <div id="taskText" class="task-text">
-              Starte links ein neues Gespräch. Vor jedem Gespräch erscheint zuerst eine Auftragskarte.
-            </div>
-
-            <div class="display-row twin">
-              <div>
-                <span class="display-label">Schritt</span>
-                <div id="stepText" class="small-info">—</div>
-              </div>
-              <div>
-                <span class="display-label">Situation</span>
-                <div id="situationText" class="small-info">—</div>
-              </div>
-            </div>
-
-            <div class="display-row">
-              <span class="display-label">Erkannter Funkspruch</span>
-            </div>
-            <div id="transcriptBox" class="transcript-box">—</div>
-
-            <div class="display-row">
-              <span class="display-label">Rückmeldung</span>
-            </div>
-            <div id="feedbackBox" class="feedback-box neutral">
-              Die App prüft Reihenfolge, Inhalt und schweizerische Funkwörter.
-            </div>
-          </div>
-
-          <div class="ptt-section">
-            <button id="pttButton" class="ptt-button" disabled>
-              <span class="ptt-main">Sprechtaste</span>
-              <span class="ptt-sub">gedrückt halten beim Sprechen</span>
-            </button>
-            <div id="pttHint" class="ptt-hint">Bereit</div>
-          </div>
-        </div>
-      </section>
-
-      <aside class="panel panel-right">
-        <h2>Funkregeln</h2>
-        <div class="rules-box">
-          <p><strong>1.</strong> Zuerst sagst du, wen du anfunkst.</p>
-          <p><strong>2.</strong> Dann sagst du „von“ und deinen eigenen Rufnamen.</p>
-          <p><strong>3.</strong> Danach kommt die Meldung: kurz und klar.</p>
-          <p><strong>4.</strong> Am Schluss folgt meist „antworten“.</p>
-          <p><strong>5.</strong> Wenn etwas unklar ist: „Nicht verstanden, wiederholen, antworten“.</p>
-          <p><strong>6.</strong> Beim Wiederholen: „Ich wiederhole, … , antworten“.</p>
-          <p><strong>7.</strong> Gesprächsende: „Richtig, Schluss“ oder „Schluss“.</p>
-        </div>
-
-        <h2>Hinweise</h2>
-        <div class="note-box">
-          <p>Empfohlen: Chrome oder Edge.</p>
-          <p>Die Auftragskarte zeigt Ziel, Auftrag und wichtige Informationen.</p>
-          <p>Die Spracherkennung ist nicht perfekt. Deshalb bewertet die App tolerant.</p>
-        </div>
-      </aside>
-    </main>
-  </div>
-
-  <!-- Einstellungen -->
-  <div id="settingsModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card">
-      <h2>Einstellungen</h2>
-
-      <label class="field">
-        <span>Eigener Rufname</span>
-        <input id="studentNameInput" type="text" placeholder="z. B. Anna" maxlength="20" />
-      </label>
-
-      <label class="field checkbox-row">
-        <input id="noiseToggle" type="checkbox" />
-        <span>Funkrauschen aktivieren</span>
-      </label>
-
-      <label class="field checkbox-row">
-        <input id="autoReadToggle" type="checkbox" checked />
-        <span>Aufgabentexte automatisch vorlesen</span>
-      </label>
-
-      <label class="field">
-        <span>Stimme</span>
-        <select id="voiceSelect"></select>
-      </label>
-
-      <label class="field">
-        <span>Sprechtempo</span>
-        <input id="rateRange" type="range" min="0.7" max="1.1" step="0.05" value="0.9" />
-      </label>
-
-      <label class="field">
-        <span>Lautstärke Sprache</span>
-        <input id="speechVolumeRange" type="range" min="0" max="1" step="0.05" value="1" />
-      </label>
-
-      <label class="field">
-        <span>Lautstärke Geräusche</span>
-        <input id="sfxVolumeRange" type="range" min="0" max="1" step="0.05" value="0.7" />
-      </label>
-
-      <div class="modal-actions">
-        <button id="settingsCancelBtn" class="secondary-btn">Abbrechen</button>
-        <button id="settingsOkBtn" class="primary-btn">OK</button>
-      </div>
+  <header class="topbar">
+    <div>
+      <h1>Funksimulator</h1>
+      <p>Schweizer Funksprache üben</p>
     </div>
-  </div>
 
-  <!-- Auftragskarte -->
-  <div id="assignmentModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop"></div>
-    <div class="modal-card assignment-card">
-      <div class="assignment-topline">
-        <div class="assignment-badge">Neue Aufgabe</div>
-        <div id="assignmentModeChip" class="assignment-chip">Training</div>
-      </div>
-
-      <h2 id="assignmentTitle">Auftragskarte</h2>
-
-      <div class="assignment-grid">
-        <section class="assignment-section assignment-main">
-          <h3>Ziel der Übung</h3>
-          <p id="assignmentGoal">—</p>
-        </section>
-
-        <section class="assignment-section assignment-main">
-          <h3>Was du heute lernst</h3>
-          <p id="assignmentLearning">—</p>
-        </section>
-
-        <section class="assignment-section assignment-main">
-          <h3>Dein Auftrag</h3>
-          <p id="assignmentBriefing">—</p>
-        </section>
-
-        <section class="assignment-section assignment-main">
-          <h3>Wichtige Informationen</h3>
-          <p id="assignmentDetails">—</p>
-        </section>
-
-        <section class="assignment-section assignment-check">
-          <h3>Vor dem Start</h3>
-          <ul id="assignmentChecklist" class="assignment-list"></ul>
-        </section>
-
-        <section class="assignment-section assignment-help">
-          <h3>Merkhilfe</h3>
-          <div id="assignmentHelper" class="helper-box"></div>
-        </section>
-      </div>
-
-      <div class="modal-actions">
-        <button id="assignmentStartBtn" class="primary-btn">Loslegen</button>
-      </div>
+    <div class="top-actions">
+      <button id="helpBtn" class="small-btn">Hilfe</button>
+      <button id="settingsBtn" class="small-btn">Einstellungen</button>
     </div>
-  </div>
+  </header>
 
-  <script src="data/config.js"></script>
-  <script src="data/scenarios.js"></script>
+  <main class="layout">
+    <section class="card assignment-card">
+      <h2>Auftragskarte</h2>
+
+      <div class="assignment-block">
+        <h3>Ziel der Übung</h3>
+        <p id="goalText">
+          Du lernst, wie man in einem Funkgespräch korrekt antwortet.
+        </p>
+      </div>
+
+      <div class="assignment-block">
+        <h3>Dein Auftrag</h3>
+        <p id="taskText">
+          Starte ein neues Gespräch.
+        </p>
+      </div>
+
+      <div class="assignment-info">
+        <div>
+          <span>Treffpunkt</span>
+          <strong id="placeText">–</strong>
+        </div>
+        <div>
+          <span>Uhrzeit</span>
+          <strong id="timeText">–</strong>
+        </div>
+      </div>
+
+      <button id="newTaskBtn" class="primary-btn">Neue Aufgabe</button>
+      <button id="startBtn" class="green-btn" disabled>Loslegen</button>
+    </section>
+
+    <section class="card radio-card">
+      <h2>Funkgerät</h2>
+
+      <div class="radio-area">
+        <img id="radioImage" src="img/standby.png" alt="Funkgerät" class="radio-img" />
+
+        <div class="radio-side">
+          <div class="status-box">
+            <span>Status</span>
+            <strong id="statusText">Bereit</strong>
+          </div>
+
+          <div class="status-box">
+            <span>Gehört</span>
+            <p id="heardText">Noch keine Aufnahme.</p>
+          </div>
+
+          <div class="status-box">
+            <span>Feedback</span>
+            <p id="feedbackText">–</p>
+          </div>
+
+          <button id="pttBtn" class="ptt-btn" disabled>
+            Sprechtaste
+            <small>gedrückt halten</small>
+          </button>
+
+          <button id="chooseKeyBtn" class="secondary-btn">Taste definieren</button>
+          <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <h2>Einstellungen</h2>
+
+    <label>
+      Rufname
+      <input id="nameInput" type="text" value="Anna" />
+    </label>
+
+    <label>
+      Modus
+      <select id="modeSelect">
+        <option value="receive">Angerufen werden</option>
+        <option value="start">Gespräch beginnen</option>
+        <option value="notunderstood_pc">PC versteht dich nicht</option>
+        <option value="notunderstood_student">Du verstehst den PC nicht</option>
+      </select>
+    </label>
+
+    <label>
+      Schwierigkeit
+      <select id="difficultySelect">
+        <option value="easy">Leicht</option>
+        <option value="medium">Mittel</option>
+      </select>
+    </label>
+
+    <label class="check">
+      <input id="noiseToggle" type="checkbox" checked />
+      Funkrauschen aktivieren
+    </label>
+
+    <menu>
+      <button id="cancelSettingsBtn">Abbrechen</button>
+      <button id="okSettingsBtn">OK</button>
+    </menu>
+  </dialog>
+
+  <dialog id="helpDialog">
+    <h2>Hilfe</h2>
+    <p><strong>Antworten:</strong> „Bruno von Anna, verstanden, antworten“</p>
+    <p><strong>Nicht verstanden:</strong> „Nicht verstanden, wiederholen, antworten“</p>
+    <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
+    <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
+    <menu>
+      <button id="closeHelpBtn">OK</button>
+    </menu>
+  </dialog>
+
+  <audio id="sndButton" src="audio/button.wav" preload="auto"></audio>
+  <audio id="sndBeep" src="audio/beep.wav" preload="auto"></audio>
+  <audio id="sndNoise" src="audio/radio-noise.wav" preload="auto" loop></audio>
+
   <script src="app.js"></script>
 </body>
 </html>
