@@ -52,7 +52,16 @@
     pttCode: "Space",
     pttLabel: "Leertaste",
     voices: [],
-    settingsSnapshot: null
+    settingsSnapshot: null,
+    userStartDelay: null,
+    userStopDelay: null,
+    pcSpeechDelay: null
+  };
+
+  const TIMING = {
+    userPreTalkDelay: 1000,
+    userPostTalkDelay: 700,
+    pcPreSpeechDelay: 1000
   };
 
   const tasks = [
@@ -221,6 +230,7 @@
 
     recognition.onerror = () => {
       state.recognizing = false;
+      clearPttTimers();
       setStatus("Bereit");
       setRadio("standby");
       stopNoise();
@@ -229,14 +239,15 @@
     recognition.onend = () => {
       const text = state.finalText.trim();
       state.recognizing = false;
+      clearPttTimers();
+      stopNoise();
       setStatus("Bereit");
       setRadio("standby");
-      stopNoise();
 
       if (text) {
         checkAnswer(text);
       } else {
-        els.feedbackText.textContent = "Nichts erkannt. Versuche es noch einmal.";
+        els.feedbackText.textContent = "Nichts erkannt. Drücke die PTT-Taste, warte kurz, sprich, warte kurz und lasse dann los.";
       }
     };
 
@@ -326,6 +337,9 @@
   }
 
   function loadNewTask() {
+    stopAllAudio();
+    clearAllTimers();
+
     const pool = tasks.filter(t => t.mode === state.mode && t.difficulty === state.difficulty);
     state.currentTask = clone(pool[Math.floor(Math.random() * pool.length)] || tasks[0]);
     state.step = 0;
@@ -363,7 +377,7 @@
     }
 
     if (step.user) {
-      els.feedbackText.textContent = "Du bist dran. Sprechtaste gedrückt halten.";
+      els.feedbackText.textContent = "Du bist dran. PTT-Taste drücken, 1 Sekunde warten, sprechen, kurz warten, loslassen.";
       setStatus("Warten auf deinen Funkspruch");
       setRadio("standby");
     }
@@ -373,35 +387,55 @@
     const line = fill(step.pc);
     const spoken = step.distorted ? (step.distortedText || line) : line;
 
+    stopAllAudio();
+    clearAllTimers();
+
     setStatus("Empfangen");
     setRadio("receive");
     playSound("button");
 
-    if (step.distorted) startNoise(0.9);
+    if (step.distorted) {
+      startNoise(0.9);
+    }
 
-    speak(spoken, step.distorted, () => {
-      stopNoise();
-      state.step++;
-      setStatus("Bereit");
-      setRadio("standby");
-      runStep();
-    });
+    state.pcSpeechDelay = setTimeout(() => {
+      speak(spoken, step.distorted, () => {
+        stopNoise();
+        setRadio("standby");
+        setStatus("Bereit");
+        state.step++;
+        runStep();
+      });
+    }, TIMING.pcPreSpeechDelay);
   }
 
   function startPtt() {
     const step = getStep();
     if (!step || !step.user || state.pttDown || !state.recognition) return;
 
+    stopPcSpeechIfAny();
+    clearPttTimers();
+
     state.pttDown = true;
+    state.finalText = "";
     els.pttBtn.classList.add("active");
-    playSound("button");
-    setRadio("send");
+    els.heardText.textContent = "PTT gedrückt … warte kurz, dann sprechen.";
+    els.feedbackText.textContent = "PTT offen. Kurz warten, dann sprechen.";
     setStatus("Senden");
+    setRadio("send");
+    playSound("button");
     startNoise(0.25);
 
-    try {
-      state.recognition.start();
-    } catch (err) {}
+    state.userStartDelay = setTimeout(() => {
+      if (!state.pttDown) return;
+
+      els.heardText.textContent = "Jetzt sprechen …";
+      els.feedbackText.textContent = "Sprich jetzt. Am Schluss kurz warten und dann loslassen.";
+
+      try {
+        state.recognition.start();
+      } catch (err) {}
+    }, TIMING.userPreTalkDelay);
   }
 
   function stopPtt() {
@@ -411,14 +445,21 @@
     els.pttBtn.classList.remove("active");
     playSound("beep");
 
+    clearTimeout(state.userStartDelay);
+
+    els.feedbackText.textContent = "PTT losgelassen. Auswertung läuft …";
+    setRadio("standby");
+    setStatus("Bereit");
+
     if (state.recognizing) {
-      try {
-        state.recognition.stop();
-      } catch (err) {}
+      state.userStopDelay = setTimeout(() => {
+        try {
+          state.recognition.stop();
+        } catch (err) {}
+      }, TIMING.userPostTalkDelay);
     } else {
       stopNoise();
-      setStatus("Bereit");
-      setRadio("standby");
+      clearPttTimers();
     }
   }
 
@@ -436,6 +477,7 @@
   }
 
   function finishTask() {
+    stopAllAudio();
     setStatus("Gespräch beendet");
     setRadio("standby");
     els.feedbackText.textContent = "Gespräch abgeschlossen. Klicke auf Neue Aufgabe.";
@@ -483,7 +525,7 @@
     setTimeout(() => {
       els.radioImage.src = map[mode] || map.standby;
       els.radioImage.classList.remove("switching");
-    }, 60);
+    }, 40);
   }
 
   function setStatus(text) {
@@ -513,6 +555,38 @@
       els.sndNoise.pause();
       els.sndNoise.currentTime = 0;
     } catch (err) {}
+  }
+
+  function stopAllAudio() {
+    stopNoise();
+    if (synth) synth.cancel();
+
+    [els.sndButton, els.sndBeep].forEach((audio) => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (err) {}
+    });
+  }
+
+  function stopPcSpeechIfAny() {
+    clearTimeout(state.pcSpeechDelay);
+    state.pcSpeechDelay = null;
+    if (synth) synth.cancel();
+    stopNoise();
+  }
+
+  function clearPttTimers() {
+    clearTimeout(state.userStartDelay);
+    clearTimeout(state.userStopDelay);
+    state.userStartDelay = null;
+    state.userStopDelay = null;
+  }
+
+  function clearAllTimers() {
+    clearPttTimers();
+    clearTimeout(state.pcSpeechDelay);
+    state.pcSpeechDelay = null;
   }
 
   function getStep() {
