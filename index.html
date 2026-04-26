@@ -26,12 +26,12 @@
 
       <div class="assignment-block">
         <h3>Ziel der Übung</h3>
-        <p id="goalText">Du lernst, wie man in einem Funkgespräch korrekt antwortet.</p>
+        <p id="goalText">–</p>
       </div>
 
       <div class="assignment-block">
         <h3>Dein Auftrag</h3>
-        <p id="taskText">Starte ein neues Gespräch.</p>
+        <p id="taskText">–</p>
       </div>
 
       <div class="assignment-info">
@@ -53,7 +53,7 @@
       <h2>Funkgerät</h2>
 
       <div class="radio-area">
-        <img id="radioImage" src="img/standby.png" alt="Funkgerät im Standby-Modus" class="radio-img">
+        <img id="radioImage" src="img/standby.png" class="radio-img">
 
         <div class="radio-side">
           <div class="status-box">
@@ -71,13 +71,13 @@
             <p id="feedbackText">–</p>
           </div>
 
-          <button id="pttBtn" class="ptt-btn" type="button" disabled>
+          <button id="pttBtn" class="ptt-btn" disabled>
             Sprechtaste
             <small>gedrückt halten</small>
           </button>
 
-          <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
-          <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
+          <button id="chooseKeyBtn" class="secondary-btn">Taste definieren</button>
+          <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
         </div>
       </div>
     </section>
@@ -88,7 +88,7 @@
 
     <label>
       Rufname
-      <input id="nameInput" type="text" value="Anna" autocomplete="off">
+      <input id="nameInput" type="text" value="Anna">
     </label>
 
     <label>
@@ -111,32 +111,34 @@
 
     <label class="check">
       <input id="noiseToggle" type="checkbox" checked>
-      Funkrauschen aktivieren
+      Funkrauschen
     </label>
 
     <menu>
-      <button id="cancelSettingsBtn" type="button">Abbrechen</button>
-      <button id="okSettingsBtn" type="button">OK</button>
+      <button id="cancelSettingsBtn">Abbrechen</button>
+      <button id="okSettingsBtn">OK</button>
     </menu>
   </dialog>
 
   <dialog id="helpDialog">
     <h2>Hilfe</h2>
-    <p><strong>Antworten:</strong> „Bruno von Anna, verstanden, antworten“</p>
-    <p><strong>Nicht verstanden:</strong> „Nicht verstanden, wiederholen, antworten“</p>
-    <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
-    <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
+    <p>„Bruno von Anna, verstanden, antworten“</p>
+    <p>„Nicht verstanden, wiederholen, antworten“</p>
+    <p>„Ich wiederhole …“</p>
+    <p>„Richtig, Schluss“</p>
     <menu>
-      <button id="closeHelpBtn" type="button">OK</button>
+      <button id="closeHelpBtn">OK</button>
     </menu>
   </dialog>
 
-  <audio id="sndClick" src="audio/sfx/click-soft.wav" preload="auto"></audio>
-  <audio id="sndPttDown" src="audio/sfx/ptt-down.wav" preload="auto"></audio>
-  <audio id="sndPttUp" src="audio/sfx/ptt-up-beep.wav" preload="auto"></audio>
-  <audio id="sndNoise" src="audio/sfx/static-low.mp3" preload="auto" loop></audio>
-  <audio id="sndError" src="audio/sfx/error.wav" preload="auto"></audio>
-  <audio id="sndSuccess" src="audio/sfx/success.wav" preload="auto"></audio>
+  <!-- AUDIO -->
+  <audio id="sndClick" src="audio/sfx/click-soft.wav"></audio>
+  <audio id="sndPttDown" src="audio/sfx/ptt-down.wav"></audio>
+  <audio id="sndPttUp" src="audio/sfx/ptt-up-beep.wav"></audio>
+  <audio id="sndBuzz" src="audio/sfx/buzz.wav"></audio>
+  <audio id="sndNoise" src="audio/sfx/static-low.mp3" loop></audio>
+  <audio id="sndError" src="audio/sfx/error.wav"></audio>
+  <audio id="sndSuccess" src="audio/sfx/success.wav"></audio>
 
   <script src="app.js"></script>
 </body>
