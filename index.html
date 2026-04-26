@@ -9,7 +9,7 @@
 
 <body>
   <header class="topbar">
-    <div class="brand">
+    <div>
       <h1>Funksimulator</h1>
       <p>Schweizer Funksprache üben</p>
     </div>
@@ -20,24 +20,21 @@
     </div>
   </header>
 
-  <main class="app-layout">
-    <section class="assignment-card">
-      <div class="card-header">
-        <span class="pill">Auftragskarte</span>
-        <h2 id="taskTitle">Neue Aufgabe</h2>
-      </div>
+  <main class="layout">
+    <section class="card assignment-card">
+      <h2>Auftragskarte</h2>
 
-      <div class="info-block">
+      <div class="assignment-block">
         <h3>Ziel der Übung</h3>
-        <p id="goalText">Starte eine neue Aufgabe.</p>
+        <p id="goalText">–</p>
       </div>
 
-      <div class="info-block">
+      <div class="assignment-block">
         <h3>Dein Auftrag</h3>
-        <p id="taskText">Lies die Karte und klicke auf „Loslegen“.</p>
+        <p id="taskText">–</p>
       </div>
 
-      <div class="mission-grid">
+      <div class="assignment-info">
         <div>
           <span>Treffpunkt</span>
           <strong id="placeText">–</strong>
@@ -48,101 +45,84 @@
         </div>
       </div>
 
-      <div class="hint-box">
-        <h3>Merksatz</h3>
-        <p id="hintText">Zuerst Empfänger, dann „von“, dann eigener Rufname.</p>
-      </div>
-
-      <div class="assignment-actions">
-        <button id="newTaskBtn" class="primary-btn" type="button">Neue Aufgabe</button>
-        <button id="startBtn" class="green-btn" type="button" disabled>Loslegen</button>
-      </div>
+      <button id="startBtn" class="green-btn" type="button">Loslegen</button>
+      <button id="continueBtn" class="primary-btn" type="button" disabled>Weiter</button>
+      <button id="newRoundBtn" class="secondary-btn" type="button" hidden>Neue Runde starten</button>
     </section>
 
-    <section class="radio-card">
-      <div class="card-header">
-        <span class="pill">Funkgerät</span>
-        <h2>Simulation</h2>
-      </div>
+    <section class="card radio-card">
+      <h2>Funkgerät</h2>
 
-      <div class="radio-layout">
-        <div class="radio-visual">
-          <img id="radioImage" src="./img/standby.png" alt="Funkgerät" class="radio-img">
-        </div>
+      <div class="radio-area">
+        <img id="radioImage" src="./img/standby.png" alt="Funkgerät" class="radio-img">
 
-        <div class="control-panel">
+        <div class="radio-side">
           <div class="status-box">
             <span>Status</span>
             <strong id="statusText">Bereit</strong>
           </div>
 
           <div class="status-box">
-            <span>Erkannt</span>
+            <span>Gehört</span>
             <p id="heardText">Noch keine Aufnahme.</p>
           </div>
 
-          <div class="status-box feedback">
-            <span>Rückmeldung</span>
+          <div class="status-box">
+            <span>Feedback</span>
             <p id="feedbackText">–</p>
           </div>
 
           <button id="pttBtn" class="ptt-btn" type="button" disabled>
-            <span>Sprechtaste</span>
+            Sprechtaste
             <small>gedrückt halten</small>
           </button>
 
           <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
-          <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
+          <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
         </div>
       </div>
     </section>
   </main>
 
-  <dialog id="settingsDialog" class="dialog-box">
+  <dialog id="settingsDialog">
     <h2>Einstellungen</h2>
 
     <label>
       Rufname
-      <input id="nameInput" type="text" value="Anna" autocomplete="off">
+      <input id="nameInput" type="text" value="Anna">
     </label>
 
     <label>
       Modus
       <select id="modeSelect">
+        <option value="all">Alle Aufgabentypen nacheinander</option>
         <option value="receive">Angerufen werden</option>
         <option value="start">Gespräch beginnen</option>
+        <option value="end">Gespräch beenden</option>
         <option value="notunderstood_pc">PC versteht dich nicht</option>
         <option value="notunderstood_student">Du verstehst den PC nicht</option>
       </select>
     </label>
 
-    <label>
-      Schwierigkeit
-      <select id="difficultySelect">
-        <option value="easy">Leicht</option>
-        <option value="medium">Mittel</option>
-      </select>
-    </label>
-
-    <label class="check-row">
+    <label class="check">
       <input id="noiseToggle" type="checkbox" checked>
       Funkrauschen aktivieren
     </label>
 
     <menu>
-      <button id="cancelSettingsBtn" class="secondary-btn" type="button">Abbrechen</button>
-      <button id="okSettingsBtn" class="primary-btn" type="button">OK</button>
+      <button id="cancelSettingsBtn" type="button">Abbrechen</button>
+      <button id="okSettingsBtn" type="button">OK</button>
     </menu>
   </dialog>
 
-  <dialog id="helpDialog" class="dialog-box">
+  <dialog id="helpDialog">
     <h2>Hilfe</h2>
     <p><strong>Antworten:</strong> „Bruno von Anna, verstanden, antworten“</p>
     <p><strong>Nicht verstanden:</strong> „Nicht verstanden, wiederholen, antworten“</p>
     <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
     <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
     <menu>
-      <button id="closeHelpBtn" class="primary-btn" type="button">OK</button>
+      <button id="closeHelpBtn" type="button">OK</button>
     </menu>
   </dialog>
 
