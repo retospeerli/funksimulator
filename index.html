@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="de-CH">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Funksimulator</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <header class="topbar">
     <div>
@@ -14,8 +15,8 @@
     </div>
 
     <div class="top-actions">
-      <button id="helpBtn" class="small-btn">Hilfe</button>
-      <button id="settingsBtn" class="small-btn">Einstellungen</button>
+      <button id="helpBtn" class="small-btn" type="button">Hilfe</button>
+      <button id="settingsBtn" class="small-btn" type="button">Einstellungen</button>
     </div>
   </header>
 
@@ -44,15 +45,15 @@
         </div>
       </div>
 
-      <button id="newTaskBtn" class="primary-btn">Neue Aufgabe</button>
-      <button id="startBtn" class="green-btn" disabled>Loslegen</button>
+      <button id="newTaskBtn" class="primary-btn" type="button">Neue Aufgabe</button>
+      <button id="startBtn" class="green-btn" type="button" disabled>Loslegen</button>
     </section>
 
     <section class="card radio-card">
       <h2>Funkgerät</h2>
 
       <div class="radio-area">
-        <img id="radioImage" src="img/standby.png" alt="Funkgerät" class="radio-img" />
+        <img id="radioImage" src="img/standby.png" alt="Funkgerät im Standby-Modus" class="radio-img">
 
         <div class="radio-side">
           <div class="status-box">
@@ -70,12 +71,12 @@
             <p id="feedbackText">–</p>
           </div>
 
-          <button id="pttBtn" class="ptt-btn" disabled>
+          <button id="pttBtn" class="ptt-btn" type="button" disabled>
             Sprechtaste
             <small>gedrückt halten</small>
           </button>
 
-          <button id="chooseKeyBtn" class="secondary-btn">Taste definieren</button>
+          <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
           <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
         </div>
       </div>
@@ -87,7 +88,7 @@
 
     <label>
       Rufname
-      <input id="nameInput" type="text" value="Anna" />
+      <input id="nameInput" type="text" value="Anna" autocomplete="off">
     </label>
 
     <label>
@@ -109,13 +110,13 @@
     </label>
 
     <label class="check">
-      <input id="noiseToggle" type="checkbox" checked />
+      <input id="noiseToggle" type="checkbox" checked>
       Funkrauschen aktivieren
     </label>
 
     <menu>
-      <button id="cancelSettingsBtn">Abbrechen</button>
-      <button id="okSettingsBtn">OK</button>
+      <button id="cancelSettingsBtn" type="button">Abbrechen</button>
+      <button id="okSettingsBtn" type="button">OK</button>
     </menu>
   </dialog>
 
@@ -126,7 +127,7 @@
     <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
     <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
     <menu>
-      <button id="closeHelpBtn">OK</button>
+      <button id="closeHelpBtn" type="button">OK</button>
     </menu>
   </dialog>
 
