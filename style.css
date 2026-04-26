@@ -1,345 +1,142 @@
-:root {
-  --bg: #f4efe5;
-  --card: rgba(255,255,255,0.86);
-  --line: #d7d0c5;
-  --text: #172033;
-  --muted: #667085;
-  --blue: #2d63c8;
-  --green: #299c38;
-  --red: #bd2b2b;
-  --shadow: 0 18px 45px rgba(30, 25, 15, 0.16);
-}
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funksimulator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Funksimulator</h1>
+      <p>Schweizer Funksprache üben</p>
+    </div>
 
-* {
-  box-sizing: border-box;
-}
+    <div class="top-actions">
+      <button id="helpBtn" class="small-btn">Hilfe</button>
+      <button id="settingsBtn" class="small-btn">Einstellungen</button>
+    </div>
+  </header>
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: var(--text);
-  background:
-    radial-gradient(circle at top left, #fff 0, transparent 28%),
-    linear-gradient(135deg, #f8f4ed, var(--bg));
-  min-height: 100vh;
-}
+  <main class="layout">
+    <section class="card assignment-card">
+      <h2>Auftragskarte</h2>
 
-button,
-input,
-select {
-  font: inherit;
-}
+      <div class="assignment-block">
+        <h3>Ziel der Übung</h3>
+        <p id="goalText">Du lernst, wie man in einem Funkgespräch korrekt antwortet.</p>
+      </div>
 
-.topbar {
-  height: 86px;
-  padding: 18px 34px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(255,255,255,0.72);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(10px);
-}
+      <div class="assignment-block">
+        <h3>Dein Auftrag</h3>
+        <p id="taskText">Starte ein neues Gespräch.</p>
+      </div>
 
-.topbar h1 {
-  margin: 0;
-  font-size: 2rem;
-}
+      <div class="assignment-info">
+        <div>
+          <span>Treffpunkt</span>
+          <strong id="placeText">–</strong>
+        </div>
+        <div>
+          <span>Uhrzeit</span>
+          <strong id="timeText">–</strong>
+        </div>
+      </div>
 
-.topbar p {
-  margin: 3px 0 0;
-  color: var(--muted);
-}
+      <button id="newTaskBtn" class="primary-btn">Neue Aufgabe</button>
+      <button id="startBtn" class="green-btn" disabled>Loslegen</button>
+    </section>
 
-.top-actions {
-  display: flex;
-  gap: 12px;
-}
+    <section class="card radio-card">
+      <h2>Funkgerät</h2>
 
-.layout {
-  padding: 26px 34px 34px;
-  display: grid;
-  grid-template-columns: minmax(360px, 0.9fr) minmax(520px, 1.1fr);
-  gap: 26px;
-  align-items: stretch;
-}
+      <div class="radio-area">
+        <img id="radioImage" src="img/standby.png" alt="Funkgerät" class="radio-img" />
 
-.card {
-  background: var(--card);
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  padding: 26px;
-}
+        <div class="radio-side">
+          <div class="status-box">
+            <span>Status</span>
+            <strong id="statusText">Bereit</strong>
+          </div>
 
-.card h2 {
-  margin: 0 0 22px;
-  font-size: 1.55rem;
-}
+          <div class="status-box">
+            <span>Gehört</span>
+            <p id="heardText">Noch keine Aufnahme.</p>
+          </div>
 
-.assignment-card {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 146px);
-}
+          <div class="status-box">
+            <span>Feedback</span>
+            <p id="feedbackText">–</p>
+          </div>
 
-.assignment-block {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 20px;
-  margin-bottom: 18px;
-}
+          <button id="pttBtn" class="ptt-btn" disabled>
+            Sprechtaste
+            <small>gedrückt halten</small>
+          </button>
 
-.assignment-block h3 {
-  margin: 0 0 10px;
-  color: var(--blue);
-}
+          <button id="chooseKeyBtn" class="secondary-btn">Taste definieren</button>
+          <p class="key-info">Aktuelle Taste: <strong id="keyName">Leertaste</strong></p>
+        </div>
+      </div>
+    </section>
+  </main>
 
-.assignment-block p {
-  margin: 0;
-  line-height: 1.5;
-  font-size: 1.08rem;
-}
+  <dialog id="settingsDialog">
+    <h2>Einstellungen</h2>
 
-.assignment-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin: 8px 0 24px;
-}
+    <label>
+      Rufname
+      <input id="nameInput" type="text" value="Anna" />
+    </label>
 
-.assignment-info div {
-  background: #edf5ff;
-  border: 1px solid #c7dcff;
-  border-radius: 16px;
-  padding: 16px;
-}
+    <label>
+      Modus
+      <select id="modeSelect">
+        <option value="receive">Angerufen werden</option>
+        <option value="start">Gespräch beginnen</option>
+        <option value="notunderstood_pc">PC versteht dich nicht</option>
+        <option value="notunderstood_student">Du verstehst den PC nicht</option>
+      </select>
+    </label>
 
-.assignment-info span {
-  display: block;
-  color: var(--muted);
-  margin-bottom: 5px;
-}
+    <label>
+      Schwierigkeit
+      <select id="difficultySelect">
+        <option value="easy">Leicht</option>
+        <option value="medium">Mittel</option>
+      </select>
+    </label>
 
-.assignment-info strong {
-  font-size: 1.2rem;
-}
+    <label class="check">
+      <input id="noiseToggle" type="checkbox" checked />
+      Funkrauschen aktivieren
+    </label>
 
-.primary-btn,
-.green-btn,
-.secondary-btn,
-.small-btn,
-.ptt-btn {
-  border: 0;
-  border-radius: 15px;
-  cursor: pointer;
-  font-weight: 750;
-}
+    <menu>
+      <button id="cancelSettingsBtn">Abbrechen</button>
+      <button id="okSettingsBtn">OK</button>
+    </menu>
+  </dialog>
 
-.primary-btn {
-  background: var(--blue);
-  color: white;
-  padding: 16px;
-  font-size: 1.05rem;
-  margin-top: auto;
-}
+  <dialog id="helpDialog">
+    <h2>Hilfe</h2>
+    <p><strong>Antworten:</strong> „Bruno von Anna, verstanden, antworten“</p>
+    <p><strong>Nicht verstanden:</strong> „Nicht verstanden, wiederholen, antworten“</p>
+    <p><strong>Wiederholen:</strong> „Ich wiederhole, Treffpunkt … um …, antworten“</p>
+    <p><strong>Beenden:</strong> „Richtig, Schluss“ oder „Schluss“</p>
+    <menu>
+      <button id="closeHelpBtn">OK</button>
+    </menu>
+  </dialog>
 
-.green-btn {
-  background: var(--green);
-  color: white;
-  padding: 18px;
-  font-size: 1.25rem;
-  margin-top: 12px;
-}
+  <audio id="sndClick" src="audio/click-soft.wav" preload="auto"></audio>
+  <audio id="sndPttDown" src="audio/ptt-down.wav" preload="auto"></audio>
+  <audio id="sndPttUp" src="audio/ptt-up-beep.wav" preload="auto"></audio>
+  <audio id="sndNoise" src="audio/static-low.mp3" preload="auto" loop></audio>
+  <audio id="sndError" src="audio/error.wav" preload="auto"></audio>
+  <audio id="sndSuccess" src="audio/success.wav" preload="auto"></audio>
 
-.secondary-btn,
-.small-btn {
-  background: white;
-  color: var(--text);
-  border: 1px solid var(--line);
-  padding: 13px 16px;
-}
-
-.small-btn {
-  min-width: 132px;
-}
-
-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.radio-card {
-  min-height: calc(100vh - 146px);
-}
-
-.radio-area {
-  display: grid;
-  grid-template-columns: minmax(290px, 1fr) 245px;
-  gap: 24px;
-  align-items: center;
-}
-
-.radio-img {
-  width: 100%;
-  max-height: calc(100vh - 250px);
-  object-fit: contain;
-  filter: drop-shadow(0 18px 25px rgba(0,0,0,0.24));
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-
-.radio-img.switching {
-  opacity: 0.55;
-  transform: scale(0.995);
-}
-
-.radio-side {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.status-box {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 15px;
-}
-
-.status-box span {
-  display: block;
-  color: var(--blue);
-  text-transform: uppercase;
-  font-weight: 800;
-  font-size: 0.9rem;
-  margin-bottom: 6px;
-}
-
-.status-box p {
-  margin: 0;
-  line-height: 1.35;
-}
-
-.ptt-btn {
-  min-height: 105px;
-  background: linear-gradient(180deg, #4b4b4b, #202020);
-  color: white;
-  font-size: 1.35rem;
-  box-shadow: inset 0 -6px 0 rgba(0,0,0,0.26);
-}
-
-.ptt-btn small {
-  display: block;
-  font-weight: 500;
-  font-size: 0.9rem;
-  margin-top: 6px;
-}
-
-.ptt-btn.active {
-  transform: translateY(3px);
-  box-shadow: inset 0 6px 0 rgba(0,0,0,0.28);
-  background: linear-gradient(180deg, #6a6a6a, #2c2c2c);
-}
-
-.key-info {
-  margin: 0;
-  color: var(--muted);
-  text-align: center;
-}
-
-dialog {
-  border: 0;
-  border-radius: 22px;
-  box-shadow: var(--shadow);
-  padding: 26px;
-  width: min(480px, 92vw);
-}
-
-dialog::backdrop {
-  background: rgba(0,0,0,0.48);
-  backdrop-filter: blur(4px);
-}
-
-dialog h2 {
-  margin-top: 0;
-}
-
-dialog label {
-  display: block;
-  margin: 16px 0;
-  font-weight: 650;
-}
-
-dialog input,
-dialog select {
-  margin-top: 7px;
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-}
-
-dialog .check {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-dialog .check input {
-  width: auto;
-  margin: 0;
-}
-
-dialog menu {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding: 0;
-  margin: 22px 0 0;
-}
-
-@media (max-width: 1050px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
-  .assignment-card,
-  .radio-card {
-    min-height: auto;
-  }
-
-  .radio-area {
-    grid-template-columns: 1fr;
-  }
-
-  .radio-img {
-    max-height: 620px;
-  }
-}
-
-@media (max-width: 650px) {
-  .topbar {
-    height: auto;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-
-  .top-actions {
-    width: 100%;
-  }
-
-  .small-btn {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .layout {
-    padding: 18px;
-  }
-
-  .assignment-info {
-    grid-template-columns: 1fr;
-  }
-}
+  <script src="app.js"></script>
+</body>
+</html>
