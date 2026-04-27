@@ -325,6 +325,27 @@ button:disabled {
   font-size: 0.8rem;
 }
 
+.feedback-good {
+  color: #167a32;
+  font-weight: 800;
+}
+
+.feedback-bad {
+  color: #b42318;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.feedback-neutral {
+  color: #333;
+  font-weight: 600;
+}
+
+.feedback-line {
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
 dialog {
   border: 0;
   border-radius: 20px;
