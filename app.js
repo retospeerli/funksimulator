@@ -13,6 +13,11 @@
     placeText: document.getElementById("placeText"),
     timeText: document.getElementById("timeText"),
 
+    hintMain: document.getElementById("hintMain"),
+    hintOne: document.getElementById("hintOne"),
+    hintTwo: document.getElementById("hintTwo"),
+    hintThree: document.getElementById("hintThree"),
+
     startBtn: document.getElementById("startBtn"),
     continueBtn: document.getElementById("continueBtn"),
     newRoundBtn: document.getElementById("newRoundBtn"),
@@ -56,8 +61,10 @@
     currentTypeIndex: 0,
     waitingAfterSuccess: false,
     pcTimer: null,
+    pcPostTimer: null,
     userStartTimer: null,
-    userStopTimer: null
+    userStopTimer: null,
+    nextPromptTimer: null
   };
 
   const TIMING = {
@@ -156,7 +163,13 @@
   };
 
   function init() {
-    if (SpeechRecognition) setupRecognition();
+    if (SpeechRecognition) {
+      setupRecognition();
+    } else {
+      els.feedbackText.textContent = "Dieser Browser unterstützt keine Spracherkennung. Bitte Chrome oder Edge verwenden.";
+      els.pttBtn.disabled = true;
+    }
+
     bindEvents();
     loadTask(getCurrentTaskType());
     setRadio("standby");
@@ -268,12 +281,24 @@
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const txt = e.results[i][0].transcript.trim();
-        if (e.results[i].isFinal) final += (final ? " " : "") + txt;
-        else interim += (interim ? " " : "") + txt;
+
+        if (e.results[i].isFinal) {
+          final += (final ? " " : "") + txt;
+        } else {
+          interim += (interim ? " " : "") + txt;
+        }
       }
 
       state.finalText = final.trim();
       els.heardText.textContent = [state.finalText, interim].filter(Boolean).join(" ");
+    };
+
+    r.onerror = () => {
+      state.recognizing = false;
+      stopNoise();
+      setRadio("standby");
+      setStatus("Bereit");
+      els.feedbackText.textContent = "Die Spracherkennung hatte ein Problem. Versuche es nochmals.";
     };
 
     r.onend = () => {
@@ -283,6 +308,7 @@
       setStatus("Bereit");
 
       const heard = state.finalText.trim();
+
       if (!heard) {
         els.feedbackText.textContent = "Nichts erkannt. Drücke PTT, warte kurz, sprich, warte kurz und lasse los.";
         return;
@@ -307,6 +333,8 @@
     state.currentTask.type = type;
     state.step = 0;
     state.waitingAfterSuccess = false;
+    state.finalText = "";
+    state.pttDown = false;
 
     els.goalText.textContent = state.currentTask.goal;
     els.taskText.textContent = state.currentTask.task;
@@ -314,6 +342,8 @@
     els.timeText.textContent = state.currentTask.time;
     els.feedbackText.textContent = `Aufgabentyp: ${label(type)}. Lies die Karte und klicke auf „Loslegen“.`;
     els.heardText.textContent = "Noch keine Aufnahme.";
+
+    renderHints(type);
 
     els.startBtn.disabled = false;
     els.continueBtn.disabled = true;
@@ -324,12 +354,61 @@
     setStatus("Auftrag bereit");
   }
 
+  function renderHints(type) {
+    const self = state.name || "Anna";
+
+    const hints = {
+      receive: {
+        main: "Antworte auf den Anruf der Gegenstation.",
+        one: `Wenn du angerufen wirst: „Bruno von ${self}, verstanden, antworten“`,
+        two: "Wenn du die Meldung verstanden hast: „Richtig, Schluss“",
+        three: "Warte immer kurz nach dem Drücken der Sprechtaste."
+      },
+      start: {
+        main: "Du beginnst das Funkgespräch.",
+        one: `Eröffnung: „Bruno von ${self}, antworten“`,
+        two: "Meldung: „Treffpunkt beim alten Baum um vier Uhr, antworten“",
+        three: "Am Schluss: „Schluss“"
+      },
+      end: {
+        main: "Du beendest das Gespräch korrekt.",
+        one: "Wenn die letzte Meldung stimmt: „Richtig, Schluss“",
+        two: "Danach wartet die Gegenstation oder sagt selbst „Schluss“.",
+        three: "Nicht nochmals eine neue Meldung beginnen."
+      },
+      notunderstood_pc: {
+        main: "Der PC versteht dich nicht. Du musst wiederholen.",
+        one: "Zuerst normal funken: „Treffpunkt beim alten Baum um drei Uhr, antworten“",
+        two: "Bei Rückfrage: „Ich wiederhole, Treffpunkt beim alten Baum um drei Uhr, antworten“",
+        three: "Wiederhole die ganze Meldung, nicht nur einzelne Wörter."
+      },
+      notunderstood_student: {
+        main: "Du verstehst den PC nicht.",
+        one: "Nicht raten.",
+        two: "Sage: „Nicht verstanden, wiederholen, antworten“",
+        three: "Nach der klaren Wiederholung: „Richtig, Schluss“"
+      }
+    };
+
+    const h = hints[type] || hints.receive;
+
+    els.hintMain.textContent = h.main;
+    els.hintOne.textContent = h.one;
+    els.hintTwo.textContent = h.two;
+    els.hintThree.textContent = h.three;
+  }
+
   function startTask() {
+    clearTimers();
+    stopAllAudio();
+
     els.startBtn.disabled = true;
     els.continueBtn.disabled = true;
     els.newRoundBtn.hidden = true;
     els.pttBtn.disabled = false;
     els.feedbackText.textContent = "Das Gespräch läuft.";
+    els.heardText.textContent = "Noch keine Aufnahme.";
+
     runStep();
   }
 
@@ -368,7 +447,7 @@
 
     state.pcTimer = setTimeout(() => {
       speak(spoken, step.distorted, () => {
-        setTimeout(() => {
+        state.pcPostTimer = setTimeout(() => {
           stopNoise();
           setRadio("standby");
           setStatus("Bereit");
@@ -381,15 +460,19 @@
 
   function startPtt() {
     const step = currentStep();
+
     if (!step || !step.user || state.pttDown || !state.recognition || state.waitingAfterSuccess) return;
 
     clearTimers();
     stopAllAudio();
 
     state.pttDown = true;
+    state.finalText = "";
+
     els.pttBtn.classList.add("active");
     els.heardText.textContent = "PTT gedrückt … kurz warten.";
     els.feedbackText.textContent = "PTT offen. Warte eine Sekunde, dann sprechen.";
+
     setStatus("Senden");
     setRadio("send");
     play("pttDown");
@@ -398,7 +481,10 @@
     state.userStartTimer = setTimeout(() => {
       if (!state.pttDown) return;
       els.heardText.textContent = "Jetzt sprechen …";
-      try { state.recognition.start(); } catch {}
+
+      try {
+        state.recognition.start();
+      } catch (err) {}
     }, TIMING.pre);
   }
 
@@ -411,10 +497,12 @@
 
     clearTimeout(state.userStartTimer);
 
+    els.feedbackText.textContent = "PTT losgelassen. Auswertung läuft …";
+
     state.userStopTimer = setTimeout(() => {
       try {
         if (state.recognizing) state.recognition.stop();
-      } catch {}
+      } catch (err) {}
 
       stopNoise();
       setRadio("standby");
@@ -423,14 +511,17 @@
   }
 
   function checkAnswer(heard) {
-    const expected = fill(currentStep().user);
+    const step = currentStep();
+    if (!step || !step.user) return;
+
+    const expected = fill(step.user);
     const ok = compare(heard, expected);
 
     if (ok) {
       play("error");
-      els.feedbackText.textContent = "Richtig. Lies kurz das Feedback – in 5 Sekunden wird die nächste Übung vorgeschlagen.";
+      els.feedbackText.textContent = "Richtig. Der Funkverkehr geht weiter.";
       state.step++;
-      setTimeout(runStep, 800);
+      state.nextPromptTimer = setTimeout(runStep, 800);
     } else {
       play("success");
       els.feedbackText.textContent = `Noch nicht korrekt. Erwartet: ${expected}`;
@@ -443,7 +534,9 @@
     setStatus("Aufgabe gelöst");
     setRadio("standby");
 
-    setTimeout(() => {
+    els.feedbackText.textContent = "Aufgabe korrekt gelöst. Lies das Feedback – in 5 Sekunden wird die nächste Übung vorgeschlagen.";
+
+    state.nextPromptTimer = setTimeout(() => {
       if (state.mode === "all") {
         if (state.currentTypeIndex < taskOrder.length - 1) {
           const nextType = taskOrder[state.currentTypeIndex + 1];
@@ -456,7 +549,7 @@
           els.newRoundBtn.hidden = false;
         }
       } else {
-        els.feedbackText.textContent = `Aufgabe gelöst. Klicke auf „Weiter“, um denselben Aufgabentyp nochmals zu üben. Über „Einstellungen“ kannst du eine andere Aufgabenart wählen.`;
+        els.feedbackText.textContent = "Aufgabe gelöst. Klicke auf „Weiter“, um diesen Aufgabentyp nochmals zu üben. Über „Einstellungen“ kannst du eine andere Aufgabenart wählen.";
         els.continueBtn.textContent = "Weiter";
         els.continueBtn.disabled = false;
       }
@@ -467,6 +560,7 @@
     if (state.mode === "all") {
       state.currentTypeIndex++;
     }
+
     loadTask(getCurrentTaskType());
   }
 
@@ -488,6 +582,7 @@
     const e = normalize(expected).split(" ").filter(Boolean);
 
     let matches = 0;
+
     for (const token of e) {
       if (h.includes(token)) matches++;
     }
@@ -502,12 +597,15 @@
     }
 
     synth.cancel();
+
     const u = new SpeechSynthesisUtterance(text);
     u.lang = "de-CH";
     u.rate = distorted ? 0.62 : 0.9;
     u.pitch = distorted ? 0.55 : 1;
+
     u.onend = () => done?.();
     u.onerror = () => done?.();
+
     synth.speak(u);
   }
 
@@ -536,41 +634,58 @@
       a.pause();
       a.currentTime = 0;
       a.play().catch(() => {});
-    } catch {}
+    } catch (err) {}
   }
 
   function startNoise(volume = 0.25) {
     if (!els.noiseToggle.checked) return;
+
     try {
       els.sndNoise.volume = volume;
       els.sndNoise.currentTime = 0;
       els.sndNoise.play().catch(() => {});
-    } catch {}
+    } catch (err) {}
   }
 
   function stopNoise() {
     try {
       els.sndNoise.pause();
       els.sndNoise.currentTime = 0;
-    } catch {}
+    } catch (err) {}
   }
 
   function stopAllAudio() {
     stopNoise();
+
     if (synth) synth.cancel();
 
-    [els.sndClick, els.sndPttDown, els.sndPttUp, els.sndBuzz, els.sndError, els.sndSuccess].forEach(a => {
+    [
+      els.sndClick,
+      els.sndPttDown,
+      els.sndPttUp,
+      els.sndBuzz,
+      els.sndError,
+      els.sndSuccess
+    ].forEach(a => {
       try {
         a.pause();
         a.currentTime = 0;
-      } catch {}
+      } catch (err) {}
     });
   }
 
   function clearTimers() {
     clearTimeout(state.pcTimer);
+    clearTimeout(state.pcPostTimer);
     clearTimeout(state.userStartTimer);
     clearTimeout(state.userStopTimer);
+    clearTimeout(state.nextPromptTimer);
+
+    state.pcTimer = null;
+    state.pcPostTimer = null;
+    state.userStartTimer = null;
+    state.userStopTimer = null;
+    state.nextPromptTimer = null;
   }
 
   function label(type) {
@@ -581,6 +696,7 @@
       notunderstood_pc: "PC versteht dich nicht",
       notunderstood_student: "Du verstehst den PC nicht"
     };
+
     return labels[type] || type;
   }
 
