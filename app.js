@@ -54,11 +54,17 @@
     step: 0,
 
     recognition: null,
+    recognitionAvailable: !!SpeechRecognition,
     recognizing: false,
-    finalText: "",
+    recognitionRestarting: false,
     pttDown: false,
     pttCode: "Space",
     chooseKeyMode: false,
+
+    finalText: "",
+    interimText: "",
+    pendingEvaluation: false,
+    releaseInProgress: false,
 
     currentTypeIndex: 0,
     waitingAfterSuccess: false,
@@ -67,6 +73,7 @@
     pcPostTimer: null,
     userStartTimer: null,
     userStopTimer: null,
+    afterReleaseTimer: null,
     nextPromptTimer: null
   };
 
@@ -74,9 +81,11 @@
     pcPreSpeech: 1000,
     pcPostSpeech: 1000,
     userPreTalk: 1000,
-    userPostTalk: 600,
+    userPostTalk: 450,
+    buzzAfterRelease: 300,
     nextStep: 900,
-    successPause: 5000
+    successPause: 5000,
+    recognitionRestartDelay: 180
   };
 
   const taskOrder = [
@@ -97,7 +106,7 @@
         { pc: "{SELF} von Bruno, antworten" },
         { user: "Bruno von {SELF}, verstanden, antworten" },
         { pc: "Treffpunkt beim grossen Stein um drei Uhr, antworten" },
-        { user: "Verstanden, Treffpunkt beim grossen Stein um drei Uhr, Schluss" },
+        { user: "Verstanden, Ende" },
         { pc: "Schluss" }
       ]
     },
@@ -111,7 +120,7 @@
         { user: "Bruno von {SELF}, antworten" },
         { pc: "{SELF} von Bruno, verstanden, antworten" },
         { user: "Treffpunkt beim alten Baum um vier Uhr, antworten" },
-        { pc: "Verstanden, Treffpunkt beim alten Baum um vier Uhr, Schluss" },
+        { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
       ]
     },
@@ -123,7 +132,7 @@
       time: "halb vier",
       steps: [
         { pc: "Treffpunkt bei der roten Bank um halb vier, antworten" },
-        { user: "Verstanden, Treffpunkt bei der roten Bank um halb vier, Schluss" },
+        { user: "Verstanden, Ende" },
         { pc: "Schluss" }
       ]
     },
@@ -156,7 +165,7 @@
         },
         { user: "Nicht verstanden, wiederholen" },
         { pc: "Ich wiederhole, Treffpunkt beim grossen Stein um drei Uhr, antworten" },
-        { user: "Verstanden, Treffpunkt beim grossen Stein um drei Uhr, Schluss" },
+        { user: "Verstanden, Ende" },
         { pc: "Schluss" }
       ]
     }
@@ -268,14 +277,17 @@
     const r = new SpeechRecognition();
     r.lang = "de-CH";
     r.interimResults = true;
-    r.continuous = false;
+    r.continuous = true;
     r.maxAlternatives = 1;
 
     r.onstart = () => {
       state.recognizing = true;
-      state.finalText = "";
-      els.heardText.value = "Mikrofon aktiv … ich höre zu.";
+      state.recognitionRestarting = false;
       setStatus("Aufnahme läuft");
+
+      if (!state.finalText && !state.interimText) {
+        els.heardText.value = "Mikrofon aktiv … ich höre zu.";
+      }
     };
 
     r.onresult = e => {
@@ -293,11 +305,20 @@
       }
 
       state.finalText = final.trim();
-      els.heardText.value = [state.finalText, interim].filter(Boolean).join(" ") || "Mikrofon aktiv … noch nichts erkannt.";
+      state.interimText = interim.trim();
+
+      const output = [state.finalText, state.interimText].filter(Boolean).join(" ");
+      els.heardText.value = output || "Mikrofon aktiv … noch nichts erkannt.";
     };
 
     r.onerror = e => {
       state.recognizing = false;
+
+      if (state.pttDown && (e.error === "no-speech" || e.error === "network")) {
+        restartRecognitionWhilePttDown();
+        return;
+      }
+
       stopNoise();
       setRadio("standby");
       setStatus("Fehler");
@@ -307,7 +328,7 @@
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
         msg = "Mikrofon wurde blockiert. Bitte im Browser das Mikrofon erlauben.";
       } else if (e.error === "no-speech") {
-        msg = "Kein Sprachsignal erkannt. PTT drücken, kurz warten, dann deutlich sprechen.";
+        msg = "Kein Sprachsignal erkannt. PTT gedrückt halten und deutlich sprechen.";
       } else if (e.error === "audio-capture") {
         msg = "Kein Mikrofon gefunden. Prüfe Headset und Windows-Eingabegerät.";
       } else if (e.error === "network") {
@@ -320,25 +341,37 @@
 
     r.onend = () => {
       state.recognizing = false;
-      stopNoise();
 
-      if (!state.pttDown) {
-        setRadio("standby");
-        setStatus("Bereit");
-      }
-
-      const heard = state.finalText.trim();
-
-      if (!heard) {
-        els.heardText.value = "Nichts erkannt.";
-        els.feedbackText.textContent = "Nichts erkannt. PTT drücken, kurz warten, deutlich sprechen, kurz warten und loslassen.";
+      if (state.pttDown && !state.pendingEvaluation) {
+        restartRecognitionWhilePttDown();
         return;
       }
 
-      checkAnswer(heard);
+      if (state.pendingEvaluation) {
+        finishPttReleaseAndEvaluate();
+      }
     };
 
     state.recognition = r;
+  }
+
+  function restartRecognitionWhilePttDown() {
+    if (!state.pttDown || state.pendingEvaluation || state.recognitionRestarting) return;
+
+    state.recognitionRestarting = true;
+
+    setTimeout(() => {
+      if (!state.pttDown || state.pendingEvaluation) {
+        state.recognitionRestarting = false;
+        return;
+      }
+
+      try {
+        state.recognition.start();
+      } catch (err) {
+        state.recognitionRestarting = false;
+      }
+    }, TIMING.recognitionRestartDelay);
   }
 
   function getCurrentTaskType() {
@@ -355,8 +388,11 @@
     state.step = 0;
     state.waitingAfterSuccess = false;
     state.finalText = "";
+    state.interimText = "";
     state.pttDown = false;
     state.recognizing = false;
+    state.pendingEvaluation = false;
+    state.releaseInProgress = false;
 
     els.goalText.textContent = state.currentTask.goal;
     els.taskText.textContent = state.currentTask.task;
@@ -384,7 +420,7 @@
         main: "Antworte auf den ersten Anruf.",
         one: `Erster Kontakt: „Bruno von ${self}, verstanden, antworten“`,
         two: "Danach keine Rufnamen mehr.",
-        three: "Am Schluss: „Verstanden, Treffpunkt …, Schluss“ oder „… Ende“"
+        three: "Am Schluss genügt: „Verstanden, Ende“ oder „Verstanden, Schluss“."
       },
       start: {
         main: "Du beginnst das Funkgespräch.",
@@ -395,8 +431,8 @@
       end: {
         main: "Du bestätigst und beendest.",
         one: "Bestätige gehörte Meldung mit „verstanden“.",
-        two: "Dann wiederhole den wichtigen Inhalt kurz.",
-        three: "Abschluss: „Schluss“ oder „Ende“"
+        two: "Wenn keine Wiederholung verlangt wird, musst du die Meldung nicht vollständig wiederholen.",
+        three: "Abschluss: „Verstanden, Ende“ oder „Verstanden, Schluss“."
       },
       notunderstood_pc: {
         main: "Der PC versteht dich nicht.",
@@ -407,8 +443,8 @@
       notunderstood_student: {
         main: "Du verstehst den PC nicht.",
         one: "Nicht raten.",
-        two: "Sage: „Nicht verstanden, wiederholen“",
-        three: "Nach der Wiederholung: „Verstanden, …, Schluss“"
+        two: "Sage: „Nicht verstanden, wiederholen“.",
+        three: "Nach der Wiederholung genügt: „Verstanden, Ende“."
       }
     };
 
@@ -447,7 +483,7 @@
     }
 
     if (step.user) {
-      els.feedbackText.textContent = "Du bist dran. PTT drücken, kurz warten, sprechen, kurz warten, loslassen.";
+      els.feedbackText.textContent = "Du bist dran. PTT gedrückt halten. Die Auswertung kommt erst nach dem Loslassen.";
       setStatus("Warten auf deinen Funkspruch");
       setRadio("standby");
     }
@@ -482,24 +518,29 @@
   function startPtt() {
     const step = currentStep();
 
-    if (!step || !step.user || state.pttDown || state.recognizing || !state.recognition || state.waitingAfterSuccess) return;
+    if (!step || !step.user) return;
+    if (!state.recognition || !state.recognitionAvailable) return;
+    if (state.pttDown || state.releaseInProgress || state.waitingAfterSuccess) return;
 
     clearTimers();
     stopAllAudio();
 
     state.pttDown = true;
+    state.pendingEvaluation = false;
+    state.releaseInProgress = false;
     state.finalText = "";
+    state.interimText = "";
 
     els.pttBtn.classList.add("active");
     els.heardText.value = "PTT gedrückt … kurz warten.";
-    els.feedbackText.textContent = "PTT offen. Kurz warten, dann sprechen.";
+    els.feedbackText.textContent = "PTT offen. Halte die Taste gedrückt, sprich deutlich, lasse erst nach dem Sprechen los.";
 
     setStatus("Senden");
     setRadio("send");
     play("pttDown");
 
     state.userStartTimer = setTimeout(() => {
-      if (!state.pttDown) return;
+      if (!state.pttDown || state.pendingEvaluation) return;
 
       els.heardText.value = "Jetzt sprechen …";
 
@@ -507,21 +548,25 @@
         state.recognition.start();
       } catch (err) {
         state.recognizing = false;
-        els.heardText.value = "Aufnahme konnte nicht gestartet werden. Bitte erneut versuchen.";
+        els.heardText.value = "Aufnahme konnte nicht gestartet werden. Bitte PTT loslassen und erneut versuchen.";
       }
     }, TIMING.userPreTalk);
   }
 
   function stopPtt() {
-    if (!state.pttDown) return;
+    if (!state.pttDown || state.releaseInProgress) return;
 
     state.pttDown = false;
+    state.releaseInProgress = true;
+    state.pendingEvaluation = true;
+
     els.pttBtn.classList.remove("active");
     play("pttUp");
 
     clearTimeout(state.userStartTimer);
 
-    els.feedbackText.textContent = "PTT losgelassen. Auswertung läuft …";
+    els.feedbackText.textContent = "PTT losgelassen. Funkgerät schaltet zurück …";
+    setStatus("Auswertung wartet auf Funk-Ende");
 
     state.userStopTimer = setTimeout(() => {
       if (state.recognizing) {
@@ -529,12 +574,41 @@
           state.recognition.stop();
         } catch (err) {
           state.recognizing = false;
+          finishPttReleaseAndEvaluate();
         }
       } else {
-        setRadio("standby");
-        setStatus("Bereit");
+        finishPttReleaseAndEvaluate();
       }
     }, TIMING.userPostTalk);
+  }
+
+  function finishPttReleaseAndEvaluate() {
+    if (!state.pendingEvaluation) return;
+
+    state.pendingEvaluation = false;
+    state.releaseInProgress = false;
+
+    stopNoise();
+    setRadio("standby");
+    setStatus("Bereit");
+    play("buzz");
+
+    state.afterReleaseTimer = setTimeout(() => {
+      const heard = getFullTranscript();
+
+      if (!heard) {
+        els.heardText.value = "Nichts erkannt.";
+        els.feedbackText.textContent = "Nichts erkannt. PTT gedrückt halten, deutlich sprechen und erst nach dem Sprechen loslassen.";
+        play("error");
+        return;
+      }
+
+      checkAnswer(heard);
+    }, TIMING.buzzAfterRelease);
+  }
+
+  function getFullTranscript() {
+    return [state.finalText, state.interimText].filter(Boolean).join(" ").trim();
   }
 
   function checkAnswer(heard) {
@@ -601,6 +675,14 @@
       lastIndex = index;
     });
 
+    if (heardNorm.includes("antworten")) {
+      const current = currentStep();
+      const expectedNorm = normalize(current && current.user ? fill(current.user) : "");
+      if (!expectedNorm.includes("antworten")) {
+        problems.push("„antworten“ wurde gesagt, obwohl danach keine Antwort mehr erwartet wird.");
+      }
+    }
+
     return {
       ok: problems.length === 0,
       problems,
@@ -612,14 +694,25 @@
     const e = normalize(expected);
     const terms = [];
 
-    if (e.includes("nicht verstanden")) terms.push({ key: "nicht verstanden", label: "nicht verstanden" });
-    else if (e.includes("verstanden")) terms.push({ key: "verstanden", label: "verstanden" });
+    if (e.includes("nicht verstanden")) {
+      terms.push({ key: "nicht verstanden", label: "nicht verstanden" });
+    } else if (e.includes("verstanden")) {
+      terms.push({ key: "verstanden", label: "verstanden" });
+    }
 
-    if (e.includes("ich wiederhole")) terms.push({ key: "ich wiederhole", label: "ich wiederhole" });
-    else if (e.includes("wiederholen")) terms.push({ key: "wiederholen", label: "wiederholen" });
+    if (e.includes("ich wiederhole")) {
+      terms.push({ key: "ich wiederhole", label: "ich wiederhole" });
+    } else if (e.includes("wiederholen")) {
+      terms.push({ key: "wiederholen", label: "wiederholen" });
+    }
 
-    if (e.includes("antworten")) terms.push({ key: "antworten", label: "antworten" });
-    if (e.includes("schluss")) terms.push({ key: "schluss", label: "schluss/ende" });
+    if (e.includes("antworten")) {
+      terms.push({ key: "antworten", label: "antworten" });
+    }
+
+    if (e.includes("schluss") || e.includes("ende")) {
+      terms.push({ key: "schluss", label: "schluss/ende" });
+    }
 
     return terms;
   }
@@ -701,7 +794,7 @@
   }
 
   function currentStep() {
-    return state.currentTask?.steps?.[state.step] || null;
+    return state.currentTask && state.currentTask.steps ? state.currentTask.steps[state.step] : null;
   }
 
   function fill(text) {
@@ -709,8 +802,23 @@
   }
 
   function compare(heard, expected) {
-    const h = normalize(heard).split(" ").filter(Boolean);
-    const e = normalize(expected).split(" ").filter(Boolean);
+    const heardNorm = normalize(heard);
+    const expectedNorm = normalize(expected);
+
+    if (isSimpleAcknowledgeExpected(expectedNorm)) {
+      return hasVerstanden(heardNorm) && hasEndWord(heardNorm);
+    }
+
+    if (expectedNorm === "schluss" || expectedNorm === "ende") {
+      return hasEndWord(heardNorm);
+    }
+
+    if (expectedNorm === "nicht verstanden wiederholen") {
+      return heardNorm.includes("nicht verstanden") && heardNorm.includes("wiederholen");
+    }
+
+    const h = heardNorm.split(" ").filter(Boolean);
+    const e = expectedNorm.split(" ").filter(Boolean);
 
     const used = new Set();
     let matches = 0;
@@ -726,14 +834,28 @@
     return matches / Math.max(e.length, 1) >= 0.8;
   }
 
+  function isSimpleAcknowledgeExpected(expectedNorm) {
+    const compact = expectedNorm.replace(/\s+/g, " ").trim();
+    return compact === "verstanden ende" || compact === "verstanden schluss";
+  }
+
+  function hasVerstanden(text) {
+    return text.includes("verstanden");
+  }
+
+  function hasEndWord(text) {
+    return text.includes("schluss") || text.includes("ende");
+  }
+
   function tokenMatches(heard, expected) {
     if (expected === "schluss" && heard === "ende") return true;
+    if (expected === "ende" && heard === "schluss") return true;
     return heard === expected;
   }
 
   function speak(text, distorted, done) {
     if (!synth) {
-      done?.();
+      if (typeof done === "function") done();
       return;
     }
 
@@ -744,8 +866,13 @@
     u.rate = distorted ? 0.62 : 0.9;
     u.pitch = distorted ? 0.55 : 1;
 
-    u.onend = () => done?.();
-    u.onerror = () => done?.();
+    u.onend = () => {
+      if (typeof done === "function") done();
+    };
+
+    u.onerror = () => {
+      if (typeof done === "function") done();
+    };
 
     synth.speak(u);
   }
@@ -820,12 +947,14 @@
     clearTimeout(state.pcPostTimer);
     clearTimeout(state.userStartTimer);
     clearTimeout(state.userStopTimer);
+    clearTimeout(state.afterReleaseTimer);
     clearTimeout(state.nextPromptTimer);
 
     state.pcTimer = null;
     state.pcPostTimer = null;
     state.userStartTimer = null;
     state.userStopTimer = null;
+    state.afterReleaseTimer = null;
     state.nextPromptTimer = null;
   }
 
