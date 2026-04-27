@@ -53,32 +53,55 @@
     <section class="card radio-card">
       <h2>Funkgerät</h2>
 
-      <div class="radio-area">
+      <div class="radio-fixed-box">
         <img id="radioImage" src="./img/standby.png" alt="Funkgerät" class="radio-img">
+      </div>
 
-        <div class="radio-side">
-          <div class="status-box">
-            <span>Status</span>
-            <strong id="statusText">Bereit</strong>
-          </div>
+      <div class="radio-controls">
+        <div class="status-box">
+          <span>Status</span>
+          <strong id="statusText">Bereit</strong>
+        </div>
 
-          <div class="status-box">
-            <span>Gehört</span>
-            <p id="heardText">Noch keine Aufnahme.</p>
-          </div>
+        <div class="status-box">
+          <span>Gehört</span>
+          <p id="heardText">Noch keine Aufnahme.</p>
+        </div>
 
-          <div class="status-box">
-            <span>Feedback</span>
-            <p id="feedbackText">–</p>
-          </div>
+        <div class="status-box">
+          <span>Feedback</span>
+          <p id="feedbackText">–</p>
+        </div>
 
-          <button id="pttBtn" class="ptt-btn" type="button" disabled>
-            Sprechtaste
-            <small>gedrückt halten</small>
-          </button>
+        <button id="pttBtn" class="ptt-btn" type="button" disabled>
+          Sprechtaste
+          <small>gedrückt halten</small>
+        </button>
 
-          <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
-          <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
+        <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
+        <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
+      </div>
+    </section>
+
+    <section class="card hint-card">
+      <h2>Was musst du sagen?</h2>
+
+      <div class="hint-main" id="hintMain">
+        Lies zuerst die Auftragskarte.
+      </div>
+
+      <div class="hint-list">
+        <div class="hint-item">
+          <span>1</span>
+          <p id="hintOne">–</p>
+        </div>
+        <div class="hint-item">
+          <span>2</span>
+          <p id="hintTwo">–</p>
+        </div>
+        <div class="hint-item">
+          <span>3</span>
+          <p id="hintThree">–</p>
         </div>
       </div>
     </section>
