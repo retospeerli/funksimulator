@@ -167,6 +167,7 @@
       setupRecognition();
     } else {
       els.feedbackText.textContent = "Dieser Browser unterstützt keine Spracherkennung. Bitte Chrome oder Edge verwenden.";
+      els.heardText.value = "Keine Spracherkennung verfügbar.";
       els.pttBtn.disabled = true;
     }
 
@@ -268,11 +269,13 @@
     r.lang = "de-CH";
     r.interimResults = true;
     r.continuous = true;
+    r.maxAlternatives = 1;
 
     r.onstart = () => {
       state.recognizing = true;
       state.finalText = "";
-      els.heardText.textContent = "Ich höre zu …";
+      els.heardText.value = "Mikrofon aktiv … ich höre zu.";
+      setStatus("Aufnahme läuft");
     };
 
     r.onresult = e => {
@@ -290,15 +293,30 @@
       }
 
       state.finalText = final.trim();
-      els.heardText.textContent = [state.finalText, interim].filter(Boolean).join(" ");
+      const output = [state.finalText, interim].filter(Boolean).join(" ");
+      els.heardText.value = output || "Mikrofon aktiv … noch nichts erkannt.";
     };
 
-    r.onerror = () => {
+    r.onerror = e => {
       state.recognizing = false;
       stopNoise();
       setRadio("standby");
-      setStatus("Bereit");
-      els.feedbackText.textContent = "Die Spracherkennung hatte ein Problem. Versuche es nochmals.";
+      setStatus("Fehler");
+
+      let msg = "Spracherkennung fehlgeschlagen.";
+
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        msg = "Mikrofon wurde blockiert. Bitte in Chrome beim Schloss-Symbol das Mikrofon erlauben.";
+      } else if (e.error === "no-speech") {
+        msg = "Kein Sprachsignal erkannt. PTT drücken, 1 Sekunde warten, dann deutlich sprechen.";
+      } else if (e.error === "audio-capture") {
+        msg = "Kein Mikrofon gefunden. Prüfe Headset, Windows-Eingabegerät und Browser-Berechtigung.";
+      } else if (e.error === "network") {
+        msg = "Netzwerkfehler bei der Browser-Spracherkennung.";
+      }
+
+      els.heardText.value = msg;
+      els.feedbackText.textContent = msg;
     };
 
     r.onend = () => {
@@ -310,7 +328,8 @@
       const heard = state.finalText.trim();
 
       if (!heard) {
-        els.feedbackText.textContent = "Nichts erkannt. Drücke PTT, warte kurz, sprich, warte kurz und lasse los.";
+        els.heardText.value = "Nichts erkannt.";
+        els.feedbackText.textContent = "Nichts erkannt. Drücke PTT, warte 1 Sekunde, sprich deutlich, warte kurz und lasse dann los.";
         return;
       }
 
@@ -341,7 +360,7 @@
     els.placeText.textContent = state.currentTask.place;
     els.timeText.textContent = state.currentTask.time;
     els.feedbackText.textContent = `Aufgabentyp: ${label(type)}. Lies die Karte und klicke auf „Loslegen“.`;
-    els.heardText.textContent = "Noch keine Aufnahme.";
+    els.heardText.value = "Noch keine Aufnahme.";
 
     renderHints(type);
 
@@ -407,7 +426,7 @@
     els.newRoundBtn.hidden = true;
     els.pttBtn.disabled = false;
     els.feedbackText.textContent = "Das Gespräch läuft.";
-    els.heardText.textContent = "Noch keine Aufnahme.";
+    els.heardText.value = "Noch keine Aufnahme.";
 
     runStep();
   }
@@ -470,7 +489,7 @@
     state.finalText = "";
 
     els.pttBtn.classList.add("active");
-    els.heardText.textContent = "PTT gedrückt … kurz warten.";
+    els.heardText.value = "PTT gedrückt … kurz warten.";
     els.feedbackText.textContent = "PTT offen. Warte eine Sekunde, dann sprechen.";
 
     setStatus("Senden");
@@ -480,11 +499,13 @@
 
     state.userStartTimer = setTimeout(() => {
       if (!state.pttDown) return;
-      els.heardText.textContent = "Jetzt sprechen …";
+      els.heardText.value = "Jetzt sprechen …";
 
       try {
         state.recognition.start();
-      } catch (err) {}
+      } catch (err) {
+        els.heardText.value = "Aufnahme konnte nicht gestartet werden. Bitte erneut versuchen.";
+      }
     }, TIMING.pre);
   }
 
