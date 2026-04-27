@@ -83,7 +83,6 @@
 
   const tasks = {
     receive: {
-      title: "Angerufen werden",
       goal: "Du lernst, wie du auf einen Funkruf korrekt antwortest.",
       task: "Der PC ruft dich an. Antworte korrekt und beende das Gespräch sauber.",
       place: "grosser Stein",
@@ -98,7 +97,6 @@
     },
 
     start: {
-      title: "Gespräch beginnen",
       goal: "Du lernst, wie du ein Funkgespräch korrekt eröffnest.",
       task: "Rufe Bruno. Teile danach Treffpunkt und Uhrzeit mit.",
       place: "alter Baum",
@@ -107,14 +105,13 @@
         { user: "Bruno von {SELF}, antworten" },
         { pc: "{SELF} von Bruno, verstanden, antworten" },
         { pc: "Wo und wann treffen wir uns? antworten" },
-        { user: "Treffpunkt beim alten Baum um vier Uhr, antworten" },
+        { user: "Verstanden, Treffpunkt beim alten Baum um vier Uhr, antworten" },
         { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
       ]
     },
 
     end: {
-      title: "Gespräch beenden",
       goal: "Du lernst, wie du ein Funkgespräch korrekt abschliesst.",
       task: "Der PC spricht den letzten Funkspruch. Beende das Gespräch korrekt.",
       place: "rote Bank",
@@ -127,15 +124,14 @@
     },
 
     notunderstood_pc: {
-      title: "PC versteht dich nicht",
       goal: "Du lernst, wie man korrekt wiederholt, wenn die Gegenstation dich nicht verstanden hat.",
       task: "Nenne Treffpunkt und Uhrzeit. Danach verlangt der PC eine Wiederholung.",
       place: "alter Baum",
       time: "3 Uhr",
       steps: [
         { pc: "{SELF} von Bruno, verstanden, wo und wann treffen wir uns? antworten" },
-        { user: "Treffpunkt beim alten Baum um drei Uhr, antworten" },
-        { pc: "Nicht verstanden, wiederholen, antworten" },
+        { user: "Verstanden, Treffpunkt beim alten Baum um drei Uhr, antworten" },
+        { pc: "Nicht verstanden, wiederholen" },
         { user: "Ich wiederhole, Treffpunkt beim alten Baum um drei Uhr, antworten" },
         { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
@@ -143,8 +139,7 @@
     },
 
     notunderstood_student: {
-      title: "Du verstehst den PC nicht",
-      goal: "Du lernst, wann du „Nicht verstanden, wiederholen, antworten“ sagen musst.",
+      goal: "Du lernst, wann du „Nicht verstanden, wiederholen“ sagen musst.",
       task: "Der PC spricht absichtlich gestört. Verlange korrekt eine Wiederholung.",
       place: "nicht hörbar",
       time: "nicht hörbar",
@@ -154,7 +149,7 @@
           distorted: true,
           distortedText: "krrr ... gromm ... schtai ... drii ... antworr ... krr"
         },
-        { user: "Nicht verstanden, wiederholen, antworten" },
+        { user: "Nicht verstanden, wiederholen" },
         { pc: "Ich wiederhole, Treffpunkt beim grossen Stein um drei Uhr, antworten" },
         { user: "Verstanden, Schluss" },
         { pc: "Schluss" }
@@ -284,17 +279,12 @@
 
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const txt = e.results[i][0].transcript.trim();
-
-        if (e.results[i].isFinal) {
-          final += (final ? " " : "") + txt;
-        } else {
-          interim += (interim ? " " : "") + txt;
-        }
+        if (e.results[i].isFinal) final += (final ? " " : "") + txt;
+        else interim += (interim ? " " : "") + txt;
       }
 
       state.finalText = final.trim();
-      const output = [state.finalText, interim].filter(Boolean).join(" ");
-      els.heardText.value = output || "Mikrofon aktiv … noch nichts erkannt.";
+      els.heardText.value = [state.finalText, interim].filter(Boolean).join(" ") || "Mikrofon aktiv … noch nichts erkannt.";
     };
 
     r.onerror = e => {
@@ -304,16 +294,10 @@
       setStatus("Fehler");
 
       let msg = "Spracherkennung fehlgeschlagen.";
-
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        msg = "Mikrofon wurde blockiert. Bitte in Chrome beim Schloss-Symbol das Mikrofon erlauben.";
-      } else if (e.error === "no-speech") {
-        msg = "Kein Sprachsignal erkannt. PTT drücken, 1 Sekunde warten, dann deutlich sprechen.";
-      } else if (e.error === "audio-capture") {
-        msg = "Kein Mikrofon gefunden. Prüfe Headset, Windows-Eingabegerät und Browser-Berechtigung.";
-      } else if (e.error === "network") {
-        msg = "Netzwerkfehler bei der Browser-Spracherkennung.";
-      }
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") msg = "Mikrofon wurde blockiert. Bitte in Chrome beim Schloss-Symbol das Mikrofon erlauben.";
+      else if (e.error === "no-speech") msg = "Kein Sprachsignal erkannt. PTT drücken, 1 Sekunde warten, dann deutlich sprechen.";
+      else if (e.error === "audio-capture") msg = "Kein Mikrofon gefunden. Prüfe Headset, Windows-Eingabegerät und Browser-Berechtigung.";
+      else if (e.error === "network") msg = "Netzwerkfehler bei der Browser-Spracherkennung.";
 
       els.heardText.value = msg;
       els.feedbackText.textContent = msg;
@@ -386,31 +370,30 @@
       start: {
         main: "Du beginnst das Funkgespräch.",
         one: `Eröffnung: „Bruno von ${self}, antworten“`,
-        two: "Meldung: „Treffpunkt beim alten Baum um vier Uhr, antworten“",
-        three: "Am Schluss: „Schluss“"
+        two: "Meldung: „Verstanden, Treffpunkt beim alten Baum um vier Uhr, antworten“",
+        three: "Am Schluss: „Schluss“ oder „Ende“"
       },
       end: {
         main: "Du beendest das Gespräch korrekt.",
         one: "Wenn die letzte Meldung stimmt: „Verstanden, Schluss“",
-        two: "Danach wartet die Gegenstation oder sagt selbst „Schluss“.",
+        two: "Du darfst statt „Schluss“ auch „Ende“ sagen.",
         three: "Nicht nochmals eine neue Meldung beginnen."
       },
       notunderstood_pc: {
         main: "Der PC versteht dich nicht. Du musst wiederholen.",
-        one: "Zuerst normal funken: „Treffpunkt beim alten Baum um drei Uhr, antworten“",
+        one: "Zuerst: „Verstanden, Treffpunkt beim alten Baum um drei Uhr, antworten“",
         two: "Bei Rückfrage: „Ich wiederhole, Treffpunkt beim alten Baum um drei Uhr, antworten“",
-        three: "Wiederhole die ganze Meldung, nicht nur einzelne Wörter."
+        three: "„Nicht verstanden, wiederholen“ hat kein „antworten“."
       },
       notunderstood_student: {
         main: "Du verstehst den PC nicht.",
         one: "Nicht raten.",
-        two: "Sage: „Nicht verstanden, wiederholen, antworten“",
+        two: "Sage: „Nicht verstanden, wiederholen“",
         three: "Nach der klaren Wiederholung: „Verstanden, Schluss“"
       }
     };
 
     const h = hints[type] || hints.receive;
-
     els.hintMain.textContent = h.main;
     els.hintOne.textContent = h.one;
     els.hintTwo.textContent = h.two;
@@ -537,17 +520,130 @@
     if (!step || !step.user) return;
 
     const expected = fill(step.user);
-    const ok = compare(heard, expected);
+    const result = analyseFunkAnswer(heard, expected);
 
-    if (ok) {
+    els.feedbackText.innerHTML = result.html;
+
+    if (result.ok) {
       play("success");
-      els.feedbackText.textContent = "Richtig. Der Funkverkehr geht weiter.";
       state.step++;
-      state.nextPromptTimer = setTimeout(runStep, 800);
+      state.nextPromptTimer = setTimeout(runStep, 1200);
     } else {
       play("error");
-      els.feedbackText.textContent = `Noch nicht korrekt. Erwartet: ${expected}`;
     }
+  }
+
+  function analyseFunkAnswer(heard, expected) {
+    const contentOk = compare(heard, expected);
+    const termResult = analyseFunkTerms(heard, expected);
+    const ok = contentOk && termResult.ok;
+
+    let html = `<div class="feedback-line"><strong>Erkannt:</strong> ${highlightFunkTerms(heard, termResult)}</div>`;
+
+    if (ok) {
+      html += `<div class="feedback-line feedback-good">Korrekt. Funkbegriffe und Reihenfolge passen.</div>`;
+    } else {
+      html += `<div class="feedback-line feedback-bad">Noch nicht korrekt.</div>`;
+
+      termResult.problems.forEach(p => {
+        html += `<div class="feedback-line feedback-bad">${escapeHtml(p)}</div>`;
+      });
+
+      if (!contentOk) {
+        html += `<div class="feedback-line feedback-bad">Der Inhalt stimmt noch nicht vollständig.</div>`;
+      }
+
+      html += `<div class="feedback-line"><strong>Erwartet:</strong> ${escapeHtml(expected)}</div>`;
+    }
+
+    return { ok, html };
+  }
+
+  function analyseFunkTerms(heard, expected) {
+    const heardNorm = normalize(heard);
+    const required = getRequiredTermSequence(expected);
+    const problems = [];
+    const found = [];
+    let lastIndex = -1;
+
+    required.forEach(term => {
+      const index = findTermIndex(heardNorm, term, lastIndex + 1);
+
+      if (index === -1) {
+        problems.push(`„${term.label}“ fehlt.`);
+        found.push({ term: term.key, ok: false });
+        return;
+      }
+
+      if (index < lastIndex) {
+        problems.push(`„${term.label}“ steht an der falschen Stelle.`);
+        found.push({ term: term.key, ok: false });
+        return;
+      }
+
+      found.push({ term: term.key, ok: true });
+      lastIndex = index;
+    });
+
+    return {
+      ok: problems.length === 0,
+      problems,
+      found
+    };
+  }
+
+  function getRequiredTermSequence(expected) {
+    const e = normalize(expected);
+    const terms = [];
+
+    if (e.includes("nicht verstanden")) terms.push({ key: "nicht verstanden", label: "nicht verstanden" });
+    else if (e.includes("verstanden")) terms.push({ key: "verstanden", label: "verstanden" });
+
+    if (e.includes("ich wiederhole")) terms.push({ key: "ich wiederhole", label: "ich wiederhole" });
+    else if (e.includes("wiederholen")) terms.push({ key: "wiederholen", label: "wiederholen" });
+
+    if (e.includes("antworten")) terms.push({ key: "antworten", label: "antworten" });
+    if (e.includes("schluss")) terms.push({ key: "schluss", label: "schluss/ende" });
+
+    return terms;
+  }
+
+  function findTermIndex(text, term, fromIndex) {
+    if (term.key === "schluss") {
+      const a = text.indexOf("schluss", fromIndex);
+      const b = text.indexOf("ende", fromIndex);
+      if (a === -1) return b;
+      if (b === -1) return a;
+      return Math.min(a, b);
+    }
+
+    return text.indexOf(term.key, fromIndex);
+  }
+
+  function highlightFunkTerms(text, termResult) {
+    let safe = escapeHtml(text);
+    const goodTerms = termResult.found.filter(x => x.ok).map(x => x.term);
+    const allTerms = [
+      "nicht verstanden",
+      "ich wiederhole",
+      "verstanden",
+      "wiederholen",
+      "antworten",
+      "schluss",
+      "ende"
+    ];
+
+    allTerms.forEach(term => {
+      const regex = new RegExp(`\\b${escapeRegExp(term)}\\b`, "gi");
+      const good = goodTerms.includes(term) || (term === "ende" && goodTerms.includes("schluss"));
+
+      safe = safe.replace(regex, match => {
+        if (good) return `<span class="feedback-good">${match}</span>`;
+        return `<span class="feedback-bad">${match}</span>`;
+      });
+    });
+
+    return safe;
   }
 
   function finishSolvedTask() {
@@ -579,10 +675,7 @@
   }
 
   function continueAfterSolvedTask() {
-    if (state.mode === "all") {
-      state.currentTypeIndex++;
-    }
-
+    if (state.mode === "all") state.currentTypeIndex++;
     loadTask(getCurrentTaskType());
   }
 
@@ -603,13 +696,23 @@
     const h = normalize(heard).split(" ").filter(Boolean);
     const e = normalize(expected).split(" ").filter(Boolean);
 
+    const used = new Set();
     let matches = 0;
 
     for (const token of e) {
-      if (h.includes(token)) matches++;
+      const index = h.findIndex((hToken, i) => !used.has(i) && tokenMatches(hToken, token));
+      if (index !== -1) {
+        used.add(index);
+        matches++;
+      }
     }
 
     return matches / Math.max(e.length, 1) >= 0.8;
+  }
+
+  function tokenMatches(heard, expected) {
+    if (expected === "schluss" && heard === "ende") return true;
+    return heard === expected;
   }
 
   function speak(text, distorted, done) {
@@ -746,6 +849,17 @@
     if (e.code.startsWith("Key")) return e.code.replace("Key", "");
     if (e.code.startsWith("Digit")) return e.code.replace("Digit", "");
     return e.key || e.code;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  }
+
+  function escapeRegExp(str) {
+    return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   init();
