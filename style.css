@@ -1,6 +1,6 @@
 :root {
   --bg: #ece4d6;
-  --card: rgba(255, 255, 255, 0.92);
+  --card: rgba(255, 255, 255, 0.93);
   --line: #d2c6b4;
   --text: #172033;
   --muted: #667085;
@@ -32,8 +32,8 @@ select {
 }
 
 .topbar {
-  height: 70px;
-  padding: 12px 22px;
+  height: 64px;
+  padding: 10px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -43,40 +43,29 @@ select {
 
 .topbar h1 {
   margin: 0;
-  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-size: clamp(1.25rem, 1.8vw, 1.8rem);
 }
 
 .topbar p {
   margin: 2px 0 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .top-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .layout {
-  height: calc(100vh - 70px);
-  padding: 14px;
+  height: calc(100vh - 64px);
+  padding: 12px;
   display: grid;
-  grid-template-columns: 30% 40% 30%;
-  gap: 14px;
+  grid-template-columns: 29% 42% 29%;
+  gap: 12px;
   align-items: stretch;
 }
 
-/* linke Spalte: Aufgabenkarte */
-.assignment-card {
-  grid-column: 1;
-}
-
-/* Mitte: Funkgerät */
-.radio-card {
-  grid-column: 2;
-}
-
-/* Rechte Spalte: Bedienung innerhalb radio-card wird optisch rechts gehalten */
 .card {
   background: var(--card);
   border: 1px solid rgba(0,0,0,0.08);
@@ -89,9 +78,10 @@ select {
 
 .card h2 {
   margin: 0 0 10px;
-  font-size: clamp(1.1rem, 1.4vw, 1.45rem);
+  font-size: clamp(1rem, 1.25vw, 1.35rem);
 }
 
+/* LINKS: AUFTRAG */
 .assignment-card {
   display: flex;
   flex-direction: column;
@@ -109,13 +99,13 @@ select {
 .assignment-block h3 {
   margin: 0 0 6px;
   color: var(--blue);
-  font-size: clamp(0.9rem, 1.1vw, 1.05rem);
+  font-size: clamp(0.86rem, 1vw, 1rem);
 }
 
 .assignment-block p {
   margin: 0;
   line-height: 1.35;
-  font-size: clamp(0.88rem, 1.1vw, 1.05rem);
+  font-size: clamp(0.82rem, 1vw, 1rem);
 }
 
 .assignment-info {
@@ -134,14 +124,130 @@ select {
 .assignment-info span {
   display: block;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   margin-bottom: 3px;
 }
 
 .assignment-info strong {
-  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
+  font-size: clamp(0.9rem, 1.05vw, 1.1rem);
 }
 
+/* MITTE: FUNKGERÄT STARR */
+.radio-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.radio-fixed-box {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.72), rgba(240,235,226,0.4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.radio-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.22));
+}
+
+.radio-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.status-box {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 8px;
+  min-height: 58px;
+  overflow: hidden;
+}
+
+.status-box span {
+  display: block;
+  color: var(--blue);
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 0.68rem;
+  margin-bottom: 3px;
+}
+
+.status-box p {
+  margin: 0;
+  line-height: 1.2;
+  font-size: 0.78rem;
+}
+
+.status-box strong {
+  font-size: 0.88rem;
+}
+
+/* RECHTS: HINWEISKARTE */
+.hint-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hint-main {
+  background: #fff7e6;
+  border: 1px solid #f2d79f;
+  border-radius: 16px;
+  padding: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+}
+
+.hint-list {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.hint-item {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 12px;
+}
+
+.hint-item span {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--blue);
+  color: white;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hint-item p {
+  margin: 0;
+  line-height: 1.35;
+  font-size: clamp(0.88rem, 1.05vw, 1.05rem);
+  font-weight: 650;
+}
+
+/* BUTTONS */
 .primary-btn,
 .green-btn,
 .secondary-btn,
@@ -162,14 +268,14 @@ select {
 .primary-btn {
   background: var(--blue);
   color: white;
-  padding: 12px;
+  padding: 11px;
 }
 
 .green-btn {
   background: var(--green);
   color: white;
-  padding: 14px;
-  font-size: 1.05rem;
+  padding: 13px;
+  font-size: 1rem;
 }
 
 .secondary-btn,
@@ -177,7 +283,7 @@ select {
   background: white;
   color: var(--text);
   border: 1px solid var(--line);
-  padding: 11px 14px;
+  padding: 10px 12px;
 }
 
 button:disabled {
@@ -185,78 +291,19 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* Funkgerät-Mittelspalte */
-.radio-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.radio-area {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 10px;
-}
-
-.radio-img {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: contain;
-  object-position: center;
-  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.22));
-}
-
-/* Die bisherige rechte Bedienbox wird im Funkgerät unten kompakt */
-.radio-side {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  align-items: stretch;
-}
-
-.status-box {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  padding: 10px;
-  min-height: 72px;
-  overflow: hidden;
-}
-
-.status-box span {
-  display: block;
-  color: var(--blue);
-  text-transform: uppercase;
-  font-weight: 800;
-  font-size: 0.72rem;
-  margin-bottom: 4px;
-}
-
-.status-box p {
-  margin: 0;
-  line-height: 1.25;
-  font-size: 0.85rem;
-}
-
-.status-box strong {
-  font-size: 0.95rem;
-}
-
 .ptt-btn {
-  min-height: 72px;
+  min-height: 58px;
   background: linear-gradient(180deg, #4b4b4b, #202020);
   color: white;
-  font-size: 1rem;
+  font-size: 0.95rem;
   box-shadow: inset 0 -5px 0 rgba(0,0,0,0.26);
 }
 
 .ptt-btn small {
   display: block;
   font-weight: 500;
-  font-size: 0.76rem;
-  margin-top: 4px;
+  font-size: 0.72rem;
+  margin-top: 3px;
 }
 
 .ptt-btn.active {
@@ -268,10 +315,10 @@ button:disabled {
   margin: 0;
   color: var(--muted);
   text-align: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
-/* Dialoge */
+/* DIALOGE */
 dialog {
   border: 0;
   border-radius: 20px;
@@ -323,17 +370,26 @@ dialog menu {
   margin: 20px 0 0;
 }
 
-/* bei kleineren Fenstern bleibt es dreigeteilt */
+/* BLEIBT IMMER DREIGETEILT */
 @media (max-width: 950px) {
   .layout {
-    grid-template-columns: 32% 38% 30%;
+    grid-template-columns: 30% 40% 30%;
     gap: 8px;
     padding: 8px;
   }
 
   .card {
-    padding: 10px;
+    padding: 9px;
     border-radius: 14px;
+  }
+
+  .topbar {
+    height: 58px;
+    padding: 8px 10px;
+  }
+
+  .layout {
+    height: calc(100vh - 58px);
   }
 
   .assignment-info {
@@ -341,27 +397,30 @@ dialog menu {
     gap: 6px;
   }
 
-  .radio-side {
+  .radio-controls {
     grid-template-columns: 1fr;
-    gap: 7px;
+    gap: 6px;
   }
 
-  .status-box {
-    min-height: 54px;
+  .status-box,
+  .ptt-btn {
+    min-height: 46px;
+  }
+
+  .hint-main,
+  .hint-item {
     padding: 8px;
   }
 
-  .ptt-btn {
-    min-height: 62px;
+  .hint-item {
+    grid-template-columns: 26px 1fr;
+    gap: 7px;
   }
 
-  .topbar {
-    height: 62px;
-    padding: 8px 12px;
-  }
-
-  .layout {
-    height: calc(100vh - 62px);
+  .hint-item span {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
   }
 }
 
@@ -370,39 +429,30 @@ dialog menu {
     display: none;
   }
 
-  .top-actions {
-    gap: 6px;
-  }
-
   .small-btn {
-    padding: 8px;
-    font-size: 0.85rem;
-  }
-
-  .layout {
-    grid-template-columns: 34% 36% 30%;
-  }
-
-  .card h2 {
-    font-size: 1rem;
-  }
-
-  .assignment-block {
-    padding: 8px;
-  }
-
-  .assignment-block p {
+    padding: 7px;
     font-size: 0.78rem;
   }
 
-  .assignment-block h3 {
-    font-size: 0.82rem;
+  .card h2 {
+    font-size: 0.92rem;
+  }
+
+  .assignment-block p,
+  .hint-item p,
+  .status-box p {
+    font-size: 0.72rem;
+  }
+
+  .assignment-block h3,
+  .status-box span {
+    font-size: 0.7rem;
   }
 
   .green-btn,
   .primary-btn,
   .secondary-btn {
-    padding: 9px;
-    font-size: 0.82rem;
+    padding: 8px;
+    font-size: 0.74rem;
   }
 }
