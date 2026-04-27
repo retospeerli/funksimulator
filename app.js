@@ -92,7 +92,7 @@
         { pc: "{SELF} von Bruno, antworten" },
         { user: "Bruno von {SELF}, verstanden, antworten" },
         { pc: "Treffpunkt beim grossen Stein um drei Uhr, antworten" },
-        { user: "Richtig, Schluss" },
+        { user: "Verstanden, Schluss" },
         { pc: "Schluss" }
       ]
     },
@@ -108,7 +108,7 @@
         { pc: "{SELF} von Bruno, verstanden, antworten" },
         { pc: "Wo und wann treffen wir uns? antworten" },
         { user: "Treffpunkt beim alten Baum um vier Uhr, antworten" },
-        { pc: "Richtig, Schluss" },
+        { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
       ]
     },
@@ -121,7 +121,7 @@
       time: "halb vier",
       steps: [
         { pc: "{SELF} von Bruno, verstanden, Treffpunkt bei der roten Bank um halb vier, antworten" },
-        { user: "Richtig, Schluss" },
+        { user: "Verstanden, Schluss" },
         { pc: "Schluss" }
       ]
     },
@@ -137,7 +137,7 @@
         { user: "Treffpunkt beim alten Baum um drei Uhr, antworten" },
         { pc: "Nicht verstanden, wiederholen, antworten" },
         { user: "Ich wiederhole, Treffpunkt beim alten Baum um drei Uhr, antworten" },
-        { pc: "Richtig, Schluss" },
+        { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
       ]
     },
@@ -156,7 +156,7 @@
         },
         { user: "Nicht verstanden, wiederholen, antworten" },
         { pc: "Ich wiederhole, Treffpunkt beim grossen Stein um drei Uhr, antworten" },
-        { user: "Richtig, Schluss" },
+        { user: "Verstanden, Schluss" },
         { pc: "Schluss" }
       ]
     }
@@ -380,7 +380,7 @@
       receive: {
         main: "Antworte auf den Anruf der Gegenstation.",
         one: `Wenn du angerufen wirst: „Bruno von ${self}, verstanden, antworten“`,
-        two: "Wenn du die Meldung verstanden hast: „Richtig, Schluss“",
+        two: "Wenn du die Meldung verstanden hast: „Verstanden, Schluss“",
         three: "Warte immer kurz nach dem Drücken der Sprechtaste."
       },
       start: {
@@ -391,7 +391,7 @@
       },
       end: {
         main: "Du beendest das Gespräch korrekt.",
-        one: "Wenn die letzte Meldung stimmt: „Richtig, Schluss“",
+        one: "Wenn die letzte Meldung stimmt: „Verstanden, Schluss“",
         two: "Danach wartet die Gegenstation oder sagt selbst „Schluss“.",
         three: "Nicht nochmals eine neue Meldung beginnen."
       },
@@ -405,7 +405,7 @@
         main: "Du verstehst den PC nicht.",
         one: "Nicht raten.",
         two: "Sage: „Nicht verstanden, wiederholen, antworten“",
-        three: "Nach der klaren Wiederholung: „Richtig, Schluss“"
+        three: "Nach der klaren Wiederholung: „Verstanden, Schluss“"
       }
     };
 
@@ -467,6 +467,7 @@
     state.pcTimer = setTimeout(() => {
       speak(spoken, step.distorted, () => {
         state.pcPostTimer = setTimeout(() => {
+          play("buzz");
           stopNoise();
           setRadio("standby");
           setStatus("Bereit");
@@ -539,12 +540,12 @@
     const ok = compare(heard, expected);
 
     if (ok) {
-      play("error");
+      play("success");
       els.feedbackText.textContent = "Richtig. Der Funkverkehr geht weiter.";
       state.step++;
       state.nextPromptTimer = setTimeout(runStep, 800);
     } else {
-      play("success");
+      play("error");
       els.feedbackText.textContent = `Noch nicht korrekt. Erwartet: ${expected}`;
     }
   }
