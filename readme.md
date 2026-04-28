@@ -18,8 +18,8 @@ Die App ist auf diese Muster ausgerichtet:
 - `Bruno von Anna, antworten`
 - `Anna von Bruno, verstanden, antworten`
 - `Nicht verstanden, wiederholen, antworten`
-- `Ich wiederhole, ... , antworten`
-- `Richtig, Schluss`
+- `Verstanden, ich wiederhole, ... , antworten`
+- `Verstanden, Schluss`
 - `Schluss`
 
 ## Modi
@@ -46,18 +46,6 @@ Empfohlen:
 ## GitHub Pages
 
 Die App kann direkt als statische Webseite auf GitHub Pages veröffentlicht werden.
-
-## Audio-Dateien
-
-Lege diese Dateien in `audio/sfx/` ab:
-
-- `ptt-down.wav`
-- `ptt-up-beep.wav`
-- `static-low.mp3`
-- `success.wav`
-- `error.wav`
-- `message-incoming.wav`
-- `round-complete.wav`
 
 ## Hinweis
 
