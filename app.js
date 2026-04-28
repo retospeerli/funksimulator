@@ -105,48 +105,55 @@
       steps: [
         { pc: "{SELF} von Bruno, antworten" },
         { user: "Bruno von {SELF}, verstanden, antworten" },
+
         { pc: "Treffpunkt beim grossen Stein um drei Uhr, antworten" },
         { user: "Verstanden, Ende" },
+
         { pc: "Schluss" }
       ]
     },
 
     start: {
       goal: "Du lernst, wie du ein Funkgespräch korrekt eröffnest.",
-      task: "Rufe Bruno. Sobald das Gespräch steht, brauchst du keine Rufnamen mehr. Teile Treffpunkt und Uhrzeit mit.",
+      task: "Rufe Bruno. Sobald das Gespräch steht, brauchst du keine Rufnamen mehr. Bestätige zuerst mit „verstanden“ und teile dann Treffpunkt und Uhrzeit mit.",
       place: "alter Baum",
       time: "4 Uhr",
       steps: [
         { user: "Bruno von {SELF}, antworten" },
         { pc: "{SELF} von Bruno, verstanden, antworten" },
-        { user: "Treffpunkt beim alten Baum um vier Uhr, antworten" },
+
+        { user: "Verstanden, Treffpunkt beim alten Baum um vier Uhr, antworten" },
         { pc: "Verstanden, Schluss" },
+
         { user: "Schluss" }
       ]
     },
 
     end: {
       goal: "Du lernst, wie du eine gehörte Meldung bestätigst und das Gespräch beendest.",
-      task: "Der PC gibt dir Treffpunkt und Uhrzeit. Bestätige die Meldung und beende korrekt.",
+      task: "Der PC gibt dir Treffpunkt und Uhrzeit. Bestätige die Meldung mit „verstanden“ und beende korrekt.",
       place: "rote Bank",
       time: "halb vier",
       steps: [
         { pc: "Treffpunkt bei der roten Bank um halb vier, antworten" },
         { user: "Verstanden, Ende" },
+
         { pc: "Schluss" }
       ]
     },
 
     notunderstood_pc: {
       goal: "Du lernst, wie du korrekt wiederholst, wenn die Gegenstelle dich nicht verstanden hat.",
-      task: "Gib Treffpunkt und Uhrzeit durch. Wenn der PC dich nicht versteht, wiederholst du mit „Ich wiederhole“.",
+      task: "Der PC fragt dich nach Treffpunkt und Uhrzeit. Bestätige zuerst mit „verstanden“. Wenn der PC dich nicht versteht, wiederholst du mit „Ich wiederhole“.",
       place: "alter Baum",
       time: "3 Uhr",
       steps: [
         { pc: "Wo und wann treffen wir uns? antworten" },
-        { user: "Treffpunkt beim alten Baum um drei Uhr, antworten" },
+        { user: "Verstanden, Treffpunkt beim alten Baum um drei Uhr, antworten" },
+
         { pc: "Nicht verstanden, wiederholen" },
         { user: "Ich wiederhole, Treffpunkt beim alten Baum um drei Uhr, antworten" },
+
         { pc: "Verstanden, Schluss" },
         { user: "Schluss" }
       ]
@@ -154,7 +161,7 @@
 
     notunderstood_student: {
       goal: "Du lernst, wie du korrekt eine Wiederholung verlangst.",
-      task: "Der PC spricht absichtlich gestört. Rate nicht, sondern verlange korrekt eine Wiederholung.",
+      task: "Der PC spricht absichtlich gestört. Rate nicht, sondern verlange korrekt eine Wiederholung. Nach der klaren Wiederholung genügt eine Bestätigung mit Gesprächsende.",
       place: "nicht hörbar",
       time: "nicht hörbar",
       steps: [
@@ -164,8 +171,10 @@
           distortedText: "krrr ... gromm ... schtai ... drii ... antworr ... krr"
         },
         { user: "Nicht verstanden, wiederholen" },
+
         { pc: "Ich wiederhole, Treffpunkt beim grossen Stein um drei Uhr, antworten" },
         { user: "Verstanden, Ende" },
+
         { pc: "Schluss" }
       ]
     }
@@ -425,7 +434,7 @@
       start: {
         main: "Du beginnst das Funkgespräch.",
         one: `Erster Anruf: „Bruno von ${self}, antworten“`,
-        two: "Danach: „Treffpunkt …, antworten“",
+        two: "Nach Antwort der Gegenstelle: „Verstanden, Treffpunkt …, antworten“",
         three: "Wer „antworten“ sagt, wartet auf die Gegenstelle."
       },
       end: {
@@ -436,9 +445,9 @@
       },
       notunderstood_pc: {
         main: "Der PC versteht dich nicht.",
-        one: "Bei Rückfrage wiederholst du mit „Ich wiederhole“.",
-        two: "„Nicht verstanden, wiederholen“ hat kein „antworten“.",
-        three: "„antworten“ nur, wenn danach die Gegenstelle sprechen soll."
+        one: "Nach einer Frage zuerst „Verstanden“, dann deine Antwort.",
+        two: "Bei Rückfrage wiederholst du mit „Ich wiederhole“.",
+        three: "„Nicht verstanden, wiederholen“ hat kein „antworten“."
       },
       notunderstood_student: {
         main: "Du verstehst den PC nicht.",
