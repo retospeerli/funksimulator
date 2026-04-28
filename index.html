@@ -56,34 +56,9 @@
       <div class="radio-fixed-box">
         <img id="radioImage" src="./img/standby.png" alt="Funkgerät" class="radio-img">
       </div>
-
-      <div class="radio-controls">
-        <div class="status-box">
-          <span>Status</span>
-          <strong id="statusText">Bereit</strong>
-        </div>
-
-        <div class="status-box transcript-box">
-          <span>Spracherkennung verstanden</span>
-          <textarea id="heardText" readonly placeholder="Hier erscheint, was erkannt wurde.">Noch keine Aufnahme.</textarea>
-        </div>
-
-        <div class="status-box">
-          <span>Feedback</span>
-          <p id="feedbackText">–</p>
-        </div>
-
-        <button id="pttBtn" class="ptt-btn" type="button" disabled>
-          Sprechtaste
-          <small>gedrückt halten</small>
-        </button>
-
-        <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
-        <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
-      </div>
     </section>
 
-    <section class="card hint-card">
+    <section class="card control-card">
       <h2>Was musst du sagen?</h2>
 
       <div class="hint-main" id="hintMain">
@@ -103,6 +78,31 @@
           <span>3</span>
           <p id="hintThree">–</p>
         </div>
+      </div>
+
+      <div class="control-grid">
+        <div class="status-box">
+          <span>Status</span>
+          <strong id="statusText">Bereit</strong>
+        </div>
+
+        <div class="status-box transcript-box">
+          <span>Spracherkennung verstanden</span>
+          <textarea id="heardText" readonly placeholder="Hier erscheint, was erkannt wurde.">Noch keine Aufnahme.</textarea>
+        </div>
+
+        <div class="status-box feedback-box">
+          <span>Feedback</span>
+          <p id="feedbackText">–</p>
+        </div>
+
+        <button id="pttBtn" class="ptt-btn" type="button" disabled>
+          Sprechtaste
+          <small>gedrückt halten</small>
+        </button>
+
+        <button id="chooseKeyBtn" class="secondary-btn" type="button">Taste definieren</button>
+        <p class="key-info">Taste: <strong id="keyName">Leertaste</strong></p>
       </div>
     </section>
   </main>
